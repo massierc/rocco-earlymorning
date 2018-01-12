@@ -15,8 +15,8 @@ class RoccoWorker
   include BusinessDate
 
   def perform(uid)
-    @config = AppConfigurator.new
-    @config.configure
+    config = AppConfigurator.new
+    config.configure
 
     user = User.find_by_uid(uid)
     logger.info "#{user.username} - #{uid} · Started for."
