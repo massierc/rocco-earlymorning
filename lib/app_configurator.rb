@@ -6,7 +6,7 @@ require_relative '../lib/message_responder'
 
 class AppConfigurator
   def configure
-    setup_i18n
+    # setup_i18n
     setup_database
   end
 
@@ -21,12 +21,12 @@ class AppConfigurator
 
   private
 
-  def setup_i18n
-    locales = File.join(File.dirname(__FILE__), '../config/locales.yml')
-    I18n.load_path = Dir[locales]
-    I18n.locale = :it
-    I18n.backend.load_translations
-  end
+  # def setup_i18n
+  #   locales = File.join(File.dirname(__FILE__), '../config/locales.yml')
+  #   I18n.load_path = Dir[locales]
+  #   I18n.locale = :it
+  #   I18n.backend.load_translations
+  # end
 
   def setup_database
     DatabaseConnector.establish_connection

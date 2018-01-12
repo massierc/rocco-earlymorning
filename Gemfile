@@ -9,6 +9,6 @@ gem 'sqlite3'
 gem 'rake'
 gem 'sidekiq'
 gem 'byebug'
-gem 'rails-i18n', github: 'svenfuchs/rails-i18n', branch: 'rails-4-x'
-gem 'sinatra'
+# gem 'rails-i18n', github: 'svenfuchs/rails-i18n', branch: 'rails-4-x'
+gem 'sinatra', github: "sinatra/sinatra"
 gem 'puma'

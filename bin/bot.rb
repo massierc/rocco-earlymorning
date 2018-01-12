@@ -10,12 +10,6 @@ require_relative '../lib/app_configurator'
 require_relative '../models/user'
 require_relative '../lib/business_date'
 
-config = AppConfigurator.new
-config.configure
-
-logger = config.get_logger
-logger.debug 'Starting telegram bot'
-
 class RoccoWorker
   include Sidekiq::Worker
   include BusinessDate
@@ -26,7 +20,7 @@ class RoccoWorker
     user_service = Authorizer.new(user.username)
     user_projects = user_service.project_cells
 
-    Telegram::Bot::Client.run('185550955:AAGco15UuOPQz-zq69V5I2ZtpOuiZcN9mtA') do |bot|
+    Telegram::Bot::Client.run('418922726:AAEykFkQMhJslyh6v3y68A8Wykg4sOUSa6U') do |bot|
       question = 'A cosa hai lavorato oggi?'
       answers = Telegram::Bot::Types::ReplyKeyboardMarkup
                 .new(keyboard: user_service.list_projects(user_projects), one_time_keyboard: true)
@@ -43,27 +37,39 @@ class RoccoWorker
   end
 end
 
-configure {
-  set :server, :puma
-}
+
 
 class CapitanRocco < Sinatra::Base
+  attr_accessor :config, :logger
+
+  configure {
+    set :server, :puma
+  }
+
+  def initialize(app = nil)
+    super(app)
+    @config = AppConfigurator.new
+    @config.configure
+
+    @logger = @config.get_logger
+    @logger.debug 'Starting telegram bot'
+  end
+
   get '/' do
-    "it works"
+     "it works"
   end
 
   post '/telegram' do
     API = 'https://api.telegram.org/file/bot'.freeze
     request.body.rewind
     data = JSON.parse(request.body.read)
-    @bot = Telegram::Bot::Api.new('185550955:AAGco15UuOPQz-zq69V5I2ZtpOuiZcN9mtA')
+    @bot = Telegram::Bot::Api.new('418922726:AAEykFkQMhJslyh6v3y68A8Wykg4sOUSa6U')
     @message = Telegram::Bot::Types::Update.new(data).message
 
     logger.debug "@#{@message.from.username}: #{@message.text}"
     options = { bot: @bot, message: @message }
 
     MessageResponder.new(options).respond
-
     status 200
   end
 end
