@@ -97,6 +97,7 @@ GEM
       mini_portile2 (~> 2.3.0)
     os (0.9.6)
     public_suffix (3.0.1)
+    puma (3.11.0)
     rack (1.6.8)
     rack-protection (2.0.0)
       rack
@@ -132,6 +133,9 @@ GEM
       faraday (~> 0.9)
       jwt (>= 1.5, < 3.0)
       multi_json (~> 1.10)
+    sinatra (1.2.8)
+      rack (~> 1.1)
+      tilt (>= 1.2.2, < 2.0)
     sqlite3 (1.3.13)
     telegram-bot-ruby (0.8.6.1)
       faraday
@@ -139,6 +143,7 @@ GEM
       virtus
     thor (0.20.0)
     thread_safe (0.3.6)
+    tilt (1.4.1)
     tzinfo (1.2.4)
       thread_safe (~> 0.1)
     uber (0.1.0)
@@ -157,9 +162,11 @@ DEPENDENCIES
   google-api-client
   googleauth
   i18n
+  puma
   rails-i18n!
   rake
   sidekiq
+  sinatra
   sqlite3
   telegram-bot-ruby
 
