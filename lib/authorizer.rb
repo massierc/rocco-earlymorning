@@ -95,7 +95,23 @@ class Authorizer
   end
 
   def project_cells(user = @tg_user)
-    this_month_sheet = I18n.l(Date.today, locale: "it", format: :sheet).capitalize
+    convert = {
+      "january": "gennaio",
+      "february": "febbraio",
+      "march": "marzo",
+      "april": "aprile",
+      "may": "maggio",
+      "june": "giugno",
+      "july": "luglio",
+      "august": "agosto",
+      "september": "settembre",
+      "october": "ottobre",
+      "november": "novembre",
+      "december": "dicembre"
+    }
+    date = Date.today.strftime("%B %Y").split
+    month = convert[date[0].downcase.to_sym]
+    this_month_sheet = (month + " " + date.last).capitalize
 
     begin
       projects = service.get_spreadsheet_values(user.sheet_id, "#{this_month_sheet}!B:C").values
