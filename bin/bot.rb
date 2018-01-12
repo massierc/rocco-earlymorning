@@ -15,6 +15,9 @@ class RoccoWorker
   include BusinessDate
 
   def perform(uid)
+    @config = AppConfigurator.new
+    @config.configure
+
     user = User.find_by_uid(uid)
     logger.info "#{user.username} - #{uid} · Started for."
     user_service = Authorizer.new(user.username)
@@ -63,6 +66,8 @@ class CapitanRocco < Sinatra::Base
     API = 'https://api.telegram.org/file/bot'.freeze
     request.body.rewind
     data = JSON.parse(request.body.read)
+    @logger.debug 'Get request'
+
     @bot = Telegram::Bot::Api.new('418922726:AAEykFkQMhJslyh6v3y68A8Wykg4sOUSa6U')
     @message = Telegram::Bot::Types::Update.new(data).message
 
