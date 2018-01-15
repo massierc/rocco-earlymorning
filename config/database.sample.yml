@@ -15,7 +15,7 @@
 # gem 'pg'
 #
 default: &default
-  adapter: sqlite3
+  adapter: postgresql
   encoding: unicode
   # For details on connection pooling, see Rails configuration guide
   # http://guides.rubyonrails.org/configuring.html#database-pooling
@@ -23,7 +23,7 @@ default: &default
 
 development:
   <<: *default
-  database: db/rocco_development
+  database: rocco_development
 
   # The specified database role being used to connect to postgres.
   # To create additional roles in postgres see `$ createuser --help`.
@@ -80,4 +80,6 @@ test:
 #
 production:
   <<: *default
-  database: db/rocco_production
+  database: rocco_production
+  username: rocco
+  password: <%= ENV['ROCCO_DATABASE_PASSWORD'] %>

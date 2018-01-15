@@ -1,6 +1,5 @@
-# require 'sidekiq'
-# require 'sidekiq/web'
-# run Sidekiq::Web
+# This file is used by Rack-based servers to start the application.
 
-require './bin/bot'
-run CapitanRocco
+require_relative 'config/environment'
+
+run Rails.application
