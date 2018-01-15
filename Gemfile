@@ -13,16 +13,18 @@ gem 'sqlite3'
 gem 'redis-activesupport'
 # Use Puma as the app server
 gem 'puma', '~> 3.7'
-gem 'sidekiq'
-gem 'activejob-cancel'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 # gem 'jbuilder', '~> 2.5'
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
 
 # Use Capistrano for deployment
-# gem 'capistrano-rails', group: :development
-
+group :development do
+  gem 'capistrano'
+  gem 'capistrano-rails'
+  gem 'capistrano-bundler'
+  gem 'capistrano3-puma', github: "seuros/capistrano-puma"
+end
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
 # gem 'rack-cors'
 

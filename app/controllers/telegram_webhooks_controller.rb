@@ -101,8 +101,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
       next_business_day = next_business_day(DateTime.now)
       next_business_day = DateTime.new(next_business_day.year, next_business_day.month, next_business_day.mday, 18, 30)
-      # RoccoWorker.perform_at(next_business_day, @user.uid)
-      # RoccoWorker.perform_async(@user.uid)
       respond_with :message, text: 'Grazie mille, ti contatterò alle 18:30. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
     end
  end
