@@ -21,7 +21,11 @@ class Authorizer
     @application_name = 'Aurora'
 
     client_secrets_path = File.join(File.dirname(__FILE__), '../../config/client_secret.json')
-    @credentials_path = File.join(File.dirname(__FILE__), '../../credentials/', "#{@uid}.yaml")
+    if Rails.env.production?
+      @credentials_path = File.join('/home/gildo/apps/rocco/shared/credentials/', "#{@uid}.yaml")
+    else
+      @credentials_path = File.join(File.dirname(__FILE__), '../../credentials/', "#{@uid}.yaml")
+    end
     scope = Google::Apis::SheetsV4::AUTH_SPREADSHEETS
     FileUtils.mkdir_p(File.dirname(@credentials_path))
     client_id = Google::Auth::ClientId.from_file(client_secrets_path)
