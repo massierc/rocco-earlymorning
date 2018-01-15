@@ -23,6 +23,7 @@ group :development do
   gem 'capistrano'
   gem 'capistrano-rails'
   gem 'capistrano-bundler'
+  gem 'capistrano-sidekiq', github: 'seuros/capistrano-sidekiq'
   gem 'capistrano3-puma', github: "seuros/capistrano-puma"
 end
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
