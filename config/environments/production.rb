@@ -1,3 +1,5 @@
+require "#{Rails.root}/lib/numeric"
+
 Rails.application.configure do
   # Set application domain, to be able to run `rake telegram:bot:set_webhook`
 # routes.default_url_options = {host: 'yourdomain.com', protocol: 'https'}

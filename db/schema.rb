@@ -21,7 +21,7 @@ ActiveRecord::Schema.define(version: 20180115111314) do
     t.string "username"
     t.string "sheet_id"
     t.string "jid"
-    t.string "setup", default: "2"
+    t.integer "setup", default: 2
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

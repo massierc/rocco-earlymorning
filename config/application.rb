@@ -30,5 +30,6 @@ module Rocco
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
     config.telegram_updates_controller.session_store = :redis_store, {expires_in: 1.month}
+    config.active_job.queue_adapter = :sidekiq
   end
 end

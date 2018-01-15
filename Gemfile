@@ -13,6 +13,8 @@ gem 'sqlite3'
 gem 'redis-activesupport'
 # Use Puma as the app server
 gem 'puma', '~> 3.7'
+gem 'sidekiq'
+gem 'activejob-cancel'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 # gem 'jbuilder', '~> 2.5'
 # Use ActiveModel has_secure_password
@@ -40,6 +42,11 @@ end
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 gem 'telegram-bot'
+gem 'googleauth'
+gem 'google-api-client'
+gem 'sidekiq'
+
+
 group :development, :test do
   gem 'rspec-rails'
   gem 'rspec-its'
