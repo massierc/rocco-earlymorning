@@ -15,5 +15,4 @@
 
 .byebug_history
 \nconfig/database.yml
-config/secrets.yml
 \nspec/examples.txt
