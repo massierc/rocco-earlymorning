@@ -10,7 +10,7 @@ set :repo_url, "git@gitlab.com:gildo/rocco.git"
 # Default deploy_to directory is /var/www/my_app_name
 set :deploy_to, '/home/gildo/apps/rocco'
 # Don't change these unless you know what you're doing
-set :pty,             true
+set :pty,             false
 set :use_sudo,        false
 set :user, "gildo"
 set :stage,           :production
