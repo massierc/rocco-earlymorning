@@ -5,8 +5,11 @@ class AskJob < ApplicationJob
   def perform(uid)
     # remove previous jobs
     ss = Sidekiq::ScheduledSet.new
-    ss.select{|l| l.item["args"][0]["arguments"].include? (uid) }.each(&:delete)
-
+    begin
+      ss.select{|l| l.item["args"][0]["arguments"].include? (uid) }.each(&:delete)
+    rescue
+      ss.select{|l| l.item["args"].include? (uid)}.each(&:delete)
+    end
     bot = Telegram.bot
     user = User.find_by_uid(uid)
     user_service = Authorizer.new(user.uid)
