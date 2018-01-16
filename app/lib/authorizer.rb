@@ -196,8 +196,6 @@ class Authorizer
 
 
   def create_missing_row(user = @tg_user, data)
-    this_month_sheet = I18n.l(Date.today, locale: "it", format: :sheet).capitalize
-
     sheets = service.get_spreadsheet(user.sheet_id).sheets
     sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
 
