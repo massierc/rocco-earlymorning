@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180115111314) do
+ActiveRecord::Schema.define(version: 20180118143135) do
 
   create_table "users", force: :cascade do |t|
     t.integer "uid"
@@ -24,6 +24,7 @@ ActiveRecord::Schema.define(version: 20180115111314) do
     t.integer "setup", default: 2
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "special", default: false
   end
 
 end

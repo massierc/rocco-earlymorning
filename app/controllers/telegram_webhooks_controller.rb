@@ -18,6 +18,25 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     end
   end
 
+  def teamrocco(*)
+    if @user.special
+      @user.update(special: false)
+      respond_with :message, text: "Adios!"
+    else
+      save_context :teamrocco
+      respond_with :photo, photo: File.open(Rails.root.join("public", "password.jpg")), caption: "Parola d\'ordine?"
+    end
+  end
+
+  context_handler :teamrocco do |*words|
+    if words[0].downcase.include?("guazzabuglio")
+      @user.update(special: true)
+      respond_with :document, document: File.open(Rails.root.join("public", "rocco", "walking.gif")), caption: "Welcome!"
+    else
+      respond_with :document, document: File.open(Rails.root.join("public", "wrong_password.gif")), caption: "Password sbagliata!"
+    end
+  end
+
   def message(_message)
     if @user.setup > 0
       handle_setup
@@ -73,7 +92,19 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     when 1
       @user.update(level: 0, howmuch: @message["text"])
       Authorizer.new(@message[:from][:id]).update_timesheet(@user)
-      respond_with :message, text: 'Grazie, il tuo TimeSheet è stato aggiornato, se vuoi aggiungere altre ore di lavoro /premimimi!'
+      m = 'Grazie, il tuo TimeSheet è stato aggiornato, se vuoi aggiungere altre ore di lavoro /premimimi!'
+      if @user.special
+        r = random_rocco
+        if r.include?("gif")
+          puts "found gif"
+          respond_with :document, document: File.open(r), caption: m
+        else
+          puts "found photo"
+          respond_with :photo, photo: File.open(r), caption: m
+        end
+      else
+        respond_with :message, text: m
+      end
     when 0
       respond_with :message, text: 'Ma lavori ancora? :P Se vuoi aggiungere altre ore di lavoro /premimimi!'
     end
@@ -105,5 +136,9 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       @user.update(jid: job.job_id, level: 3)
       respond_with :message, text: 'Grazie mille, ti contatterò alle 18:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
     end
+ end
+
+ def random_rocco
+   Dir[Rails.root.join("public", "rocco", "*")].shuffle.first
  end
 end
