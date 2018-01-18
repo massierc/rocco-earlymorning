@@ -143,13 +143,19 @@ class Authorizer
   end
 
   def find_project_cell(cells, project, activity)
+
     project_exists = cells.any?{|c| c.include? project}
     activity_exists = cells.any?{|c| c.include? activity}
 
     cell = if project != activity
       cells.find_index { |arr| arr == [project, activity] }
     else
-      cells.find_index { |arr| arr.compact == [project] }
+      same_name_project_and_activity = cells.find_index { |arr| arr == [project, activity] }
+      if same_name_project_and_activity
+        same_name_project_and_activity
+      else
+        cells.find_index { |arr| arr.compact == [project] }
+      end
     end
 
     if cell
