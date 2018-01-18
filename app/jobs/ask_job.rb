@@ -12,7 +12,7 @@ class AskJob < ApplicationJob
         s.item["args"][0] == uid
       end
     end.each(&:delete)
-    
+
     bot = Telegram.bot
     user = User.find_by_uid(uid)
     user_service = Authorizer.new(user.uid)
@@ -27,7 +27,7 @@ class AskJob < ApplicationJob
     })
 
     next_business_day = next_business_day(DateTime.now)
-    next_business_day = DateTime.new(next_business_day.year, next_business_day.month, next_business_day.mday, 18, 0o0)
+    next_business_day = DateTime.new(next_business_day.year, next_business_day.month, next_business_day.mday, 18, 00)
     job = AskJob.set(wait_until: next_business_day).perform_later(uid)
     user.update(jid: job.job_id, level: 3)
 
