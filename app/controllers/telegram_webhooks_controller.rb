@@ -130,10 +130,10 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       @user.update(setup: 0)
 
       next_business_day = next_business_day(DateTime.now)
-      next_business_day = DateTime.new(next_business_day.year, next_business_day.month, next_business_day.mday, 18, 0o0)
+      next_business_day = DateTime.new(next_business_day.year, next_business_day.month, next_business_day.mday, 18, 00)
       job = AskJob.set(wait_until: next_business_day).perform_later(@user.uid)
       @user.update(jid: job.job_id, level: 3)
-      respond_with :message, text: 'Grazie mille, ti contatterò alle 19:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
+      respond_with :message, text: 'Grazie mille, ti contatterò alle 18:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
     end
   end
 
