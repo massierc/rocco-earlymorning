@@ -196,7 +196,7 @@ class Authorizer
 
     body = {requests: requests}
     cell_index += 1
-    result = service.batch_update_spreadsheet(user.sheet_id, body, {})
+    service.batch_update_spreadsheet(user.sheet_id, body, {})
     service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!#{cell_index.to_s26.upcase}1", values(column), value_input_option: 'USER_ENTERED')
   end
 
@@ -225,7 +225,7 @@ class Authorizer
     )
     body = {requests: requests}
 
-    result = service.batch_update_spreadsheet(user.sheet_id, body, {})
+    service.batch_update_spreadsheet(user.sheet_id, body, {})
 
     name = service.get_spreadsheet_values(user.sheet_id, "#{this_month_sheet}!A2").values[0][0]
 
