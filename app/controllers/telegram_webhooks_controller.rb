@@ -21,19 +21,19 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   def teamrocco(*)
     if @user.special
       @user.update(special: false)
-      respond_with :message, text: "Adios!"
+      respond_with :message, text: 'Adios!'
     else
       save_context :teamrocco
-      respond_with :photo, photo: File.open(Rails.root.join("public", "password.jpg")), caption: "Parola d\'ordine?"
+      respond_with :photo, photo: File.open(Rails.root.join('public', 'password.jpg')), caption: "Parola d\'ordine?"
     end
   end
 
   context_handler :teamrocco do |*words|
-    if words[0].downcase.include?("guazzabuglio")
+    if words[0].downcase.include?('guazzabuglio')
       @user.update(special: true)
-      respond_with :document, document: File.open(Rails.root.join("public", "rocco", "walking.gif")), caption: "Welcome!"
+      respond_with :document, document: File.open(Rails.root.join('public', 'rocco', 'walking.gif')), caption: 'Welcome!'
     else
-      respond_with :document, document: File.open(Rails.root.join("public", "wrong_password.gif")), caption: "Password sbagliata!"
+      respond_with :document, document: File.open(Rails.root.join('public', 'wrong_password.gif')), caption: 'Password sbagliata!'
     end
   end
 
@@ -60,46 +60,46 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     user_service = Authorizer.new(@message[:from][:id])
     user_projects = user_service.project_cells
 
-    if @message["text"] =~ /stop/i
-      respond_with :message, text: "Richiesta fermata, see you #{next_business_day(DateTime.now).strftime("%A")}"
+    if @message['text'] =~ /stop/i
+      respond_with :message, text: "Richiesta fermata, see you #{next_business_day(DateTime.now).strftime('%A')}"
       @user.update(level: 0)
       return
     end
 
     case @user.level
     when 3
-      @user.update(level: 2, who: @message["text"])
+      @user.update(level: 2, who: @message['text'])
 
       activities = user_service.list_activities(user_projects, @user.who)
-      respond_with :message, text: "Quale activity?", reply_markup: {
+      respond_with :message, text: 'Quale activity?', reply_markup: {
         keyboard: [activities],
         resize_keyboard: true,
         one_time_keyboard: true,
-        selective: true,
+        selective: true
       }
 
     when 2
-      @user.update(level: 1, what: @message["text"])
+      @user.update(level: 1, what: @message['text'])
 
       activities = user_service.list_activities(user_projects, @user.who)
       respond_with :message, text: 'E per quanto tempo?', reply_markup: {
-        keyboard: [[@user.howmuch.to_s, "8"], ["stop"]],
+        keyboard: [[@user.howmuch.to_s, '8'], ['stop']],
         resize_keyboard: true,
         one_time_keyboard: true,
-        selective: true,
+        selective: true
       }
 
     when 1
-      @user.update(level: 0, howmuch: @message["text"])
+      @user.update(level: 0, howmuch: @message['text'])
       Authorizer.new(@message[:from][:id]).update_timesheet(@user)
       m = 'Grazie, il tuo TimeSheet è stato aggiornato, se vuoi aggiungere altre ore di lavoro /premimimi!'
       if @user.special
         r = random_rocco
-        if r.include?("gif")
-          puts "found gif"
+        if r.include?('gif')
+          puts 'found gif'
           respond_with :document, document: File.open(r), caption: m
         else
-          puts "found photo"
+          puts 'found photo'
           respond_with :photo, photo: File.open(r), caption: m
         end
       else
@@ -109,7 +109,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       respond_with :message, text: 'Ma lavori ancora? :P Se vuoi aggiungere altre ore di lavoro /premimimi!'
     end
   end
-
 
   def handle_setup
     case @user.setup
@@ -131,14 +130,14 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       @user.update(setup: 0)
 
       next_business_day = next_business_day(DateTime.now)
-      next_business_day = DateTime.new(next_business_day.year, next_business_day.month, next_business_day.mday, 18, 00)
+      next_business_day = DateTime.new(next_business_day.year, next_business_day.month, next_business_day.mday, 18, 0o0)
       job = AskJob.set(wait_until: next_business_day).perform_later(@user.uid)
       @user.update(jid: job.job_id, level: 3)
-      respond_with :message, text: 'Grazie mille, ti contatterò alle 18:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
+      respond_with :message, text: 'Grazie mille, ti contatterò alle 19:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
     end
- end
+  end
 
- def random_rocco
-   Dir[Rails.root.join("public", "rocco", "*")].shuffle.first
- end
+  def random_rocco
+    Dir[Rails.root.join('public', 'rocco', '*')].sample
+  end
 end
