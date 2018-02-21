@@ -3,7 +3,12 @@ class RiccardoJob < ApplicationJob
   include Utils
 
   def riccardo_uid
-    User.find_by_username("gildof").uid
+    user = if Rails.env.development?
+      "gildof"
+    else
+      "riccardocattaneo17"
+    end
+    User.find_by_username(user).uid
   end
 
   def perform(*_args)
