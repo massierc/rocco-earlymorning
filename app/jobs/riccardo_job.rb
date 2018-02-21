@@ -1,48 +1,53 @@
 class RiccardoJob < ApplicationJob
   queue_as :default
+  include Utils
+
+  def riccardo_uid
+    User.find_by_username("gildof").uid
+  end
 
   def perform(*_args)
     today = Date.today
     # TODO: Fogli corretti
+    super_sheet = '1g6Rn0cH_u4ViLDLjlnJDEKcT3rPt-7EaveDbdOtK1TY'
 
-    base_sheet = '1yu269O8geQD2esNvoEhUMJy-yrCrtmB_bENVMfih5YE'
-    out_sheet = '1b62PIL3l1EyatpUHOyXCeIC2Zyf_X4JM8v33W3HfoWA'
+    service = Authorizer.new(riccardo_uid).service
 
-    # TODO: Iterare gli utenti
-    user = Authorizer.new('87171529')
+    User.find_each do |user|
+      sheets = service.get_spreadsheet(super_sheet).sheets.collect { |x| x.properties.title }
+      projects = service.get_spreadsheet_values(user.sheet_id, "#{this_month_sheet}!A:D").values
+      cells = Hash[sheets.map {|x| [x, 0]}]
 
-    sheets = user.service.get_spreadsheet(out_sheet).sheets.collect { |x| x.properties.title }
+      current_name = nil
 
-    # TODO: Mese corrente
-    projects = user.service.get_spreadsheet_values(base_sheet, "Febbraio 2018!B:D").values
-    cells = Hash[sheets.map {|x| [x, 0]}]
-
-    sheets.each do |s|
-      projects.each_with_index do |p, i|
-        # TODO: SIMILARITY
-        cells[s] += p[-1].to_i if p[0].downcase.include?(s.downcase) && p[0]
-      end
-    end
-     a = []
-    cells.each do |k,v|
-      if v > 0
-        s = user.service.get_spreadsheet_values(out_sheet, "#{k}!D:F").values
-        # TODO: Name
-        c = s.index([today.year, today.month, "Gildo"])
-
-        if c
-          c =+ 1
-        else
-          c = s.length + 1
+      sheets.each do |s|
+        projects.each_with_index do |p, i|
+          if p[1].downcase.strip.include?(s.downcase.strip) && p[1]
+            current_name = p[0].capitalize
+            cells[s] += p[-1].to_i
+          end
         end
+      end
 
-        val = [[today.year, today.month, 'Gildos', "Sviluppo #{today.strftime('%b')}",
-          nil, nil,
-          v / 8.0,
-          nil, nil, nil, nil,
-          v / 8.0]]
+      cells.each do |k,v|
+        if v > 0
+          s = service.get_spreadsheet_values(super_sheet, "#{k}!D:F").values
+          c = s.index([today.year, today.month, current_name])
 
-        x = user.service.update_spreadsheet_value(out_sheet, "#{k}!D#{c}", values(val), value_input_option: 'USER_ENTERED')
+          if c
+            c =+ 1
+          else
+            c = s.length + 1
+          end
+
+          val = [[today.year, today.month, current_name, "Sviluppo #{today.strftime('%b')}",
+            nil, nil,
+            v / 8.0,
+            nil, nil, nil, nil,
+            v / 8.0]]
+
+          service.update_spreadsheet_value(super_sheet, "#{k}!D#{c}", values(val), value_input_option: 'USER_ENTERED')
+        end
       end
     end
 

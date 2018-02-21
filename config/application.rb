@@ -20,7 +20,6 @@ module Rocco
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 5.1
-
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
@@ -32,4 +31,7 @@ module Rocco
     config.telegram_updates_controller.session_store = :redis_store, {expires_in: 1.month}
     config.active_job.queue_adapter = :sidekiq
   end
+end
+Raven.configure do |config|
+  config.dsn = 'https://8950a242a8b54ed0855cac210682cd7c:700544d635974c4e8e9f5f89eb0962ad@sentry.io/291858'
 end

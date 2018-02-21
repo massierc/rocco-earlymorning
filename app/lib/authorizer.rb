@@ -5,6 +5,8 @@ require 'fileutils'
 require_relative '../models/user'
 
 class Authorizer
+  include Utils
+
   attr_reader :username
   attr_reader :authorizer
   attr_reader :credentials
@@ -93,28 +95,6 @@ class Authorizer
 
   def find_next_workday(workdays)
     workdays[find_current_workday(workdays)]
-  end
-
-  def this_month_sheet
-
-    convert = {
-      "January": "Gennaio",
-      "February": "Febbraio",
-      "March": "Marzo",
-      "April": "Aprile",
-      "May": "Maggio",
-      "June": "Giugno",
-      "July": "Luglio",
-      "August": "Agosto",
-      "September": "Settembre",
-      "October": "Ottobre",
-      "November": "Novembre",
-      "December": "Dicembre"
-    }
-
-    date = Date.today.strftime("%B %Y").split
-    month = convert[(date[0].to_sym)]
-    (month + " " + date.last)
   end
 
   def project_cells(sheet_id = @tg_user.sheet_id)

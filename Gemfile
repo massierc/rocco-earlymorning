@@ -44,7 +44,7 @@ gem 'telegram-bot'
 gem 'googleauth'
 gem 'google-api-client'
 gem 'sidekiq'
-gem 'string-similarity'
+gem 'sentry-raven'
 
 group :development, :test do
   gem 'rspec-rails'

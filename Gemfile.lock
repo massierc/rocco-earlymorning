@@ -209,6 +209,8 @@ GEM
       rspec-support (~> 3.7.0)
     rspec-support (3.7.1)
     ruby_dep (1.5.0)
+    sentry-raven (2.7.2)
+      faraday (>= 0.7.6, < 1.0)
     sidekiq (5.1.1)
       concurrent-ruby (~> 1.0)
       connection_pool (~> 2.2, >= 2.2.0)
@@ -237,7 +239,6 @@ GEM
     sshkit (1.16.0)
       net-scp (>= 1.1.2)
       net-ssh (>= 2.8.0)
-    string-similarity (2.0.1)
     telegram-bot (0.13.0)
       actionpack (>= 4.0, < 6.0)
       activesupport (>= 4.0, < 6.0)
@@ -277,12 +278,12 @@ DEPENDENCIES
   redis-activesupport
   rspec-its
   rspec-rails
+  sentry-raven
   sidekiq
   spring
   spring-commands-rspec
   spring-watcher-listen (~> 2.0.0)
   sqlite3
-  string-similarity
   telegram-bot
 
 BUNDLED WITH
