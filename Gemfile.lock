@@ -272,8 +272,8 @@ DEPENDENCIES
   pry-doc
   pry-nav
   pry-rails
-  puma (~> 3.7)
-  rails (~> 5.1.4)
+  puma
+  rails
   redis-activesupport
   rspec-its
   rspec-rails
