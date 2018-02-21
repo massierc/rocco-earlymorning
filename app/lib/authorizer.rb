@@ -117,10 +117,9 @@ class Authorizer
     (month + " " + date.last)
   end
 
-  def project_cells(user = @tg_user)
-
+  def project_cells(sheet_id = @tg_user.sheet_id)
     begin
-      projects = service.get_spreadsheet_values(user.sheet_id, "#{this_month_sheet}!B:C").values
+      projects = service.get_spreadsheet_values(sheet_id, "#{this_month_sheet}!B:C").values
     rescue Google::Apis::ClientError
       return false
     end

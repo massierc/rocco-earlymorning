@@ -237,6 +237,7 @@ GEM
     sshkit (1.16.0)
       net-scp (>= 1.1.2)
       net-ssh (>= 2.8.0)
+    string-similarity (2.0.1)
     telegram-bot (0.13.0)
       actionpack (>= 4.0, < 6.0)
       activesupport (>= 4.0, < 6.0)
@@ -281,8 +282,8 @@ DEPENDENCIES
   spring-commands-rspec
   spring-watcher-listen (~> 2.0.0)
   sqlite3
+  string-similarity
   telegram-bot
-  tzinfo-data
 
 BUNDLED WITH
    1.16.1

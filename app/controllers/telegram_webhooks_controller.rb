@@ -49,7 +49,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     respond_with :message, text: "Ciao #{@message[:from][:first_name]} :)"
     respond_with :message, text: 'prima di cominciare ho bisogno che mi autorizzi a modificare il tuo TimeSheet, per favore clicca su questo link'
     respond_with :message, text: 'ed in seguito digita il codice di autorizzazione'
-    @url = Authorizer.new(@message[:from][:username]).get_url
+    @url = Authorizer.new(@message[:from][:id]).get_url
     respond_with :message, text: @url
     @user.update(setup: 2)
   end
