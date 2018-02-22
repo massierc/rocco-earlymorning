@@ -19,6 +19,8 @@ class RiccardoJob < ApplicationJob
     service = Authorizer.new(riccardo_uid).service
 
     User.find_each do |user|
+      # TODO: manage auth fails
+      # next if user.username = "kiaroskuro"
       sheets = service.get_spreadsheet(super_sheet).sheets.collect { |x| x.properties.title }
       projects = service.get_spreadsheet_values(user.sheet_id, "#{this_month_sheet}!A:D").values
       cells = Hash[sheets.map {|x| [x, 0]}]
@@ -37,8 +39,7 @@ class RiccardoJob < ApplicationJob
       cells.each do |k,v|
         if v > 0
           s = service.get_spreadsheet_values(super_sheet, "#{k}!D:F").values
-          c = s.index([today.year, today.month, current_name])
-
+          c = s.index([today.year.to_s, today.month.to_s, current_name])
           if c
             c =+ 1
           else
