@@ -22,7 +22,11 @@ class RiccardoJob < ApplicationJob
       # TODO: manage auth fails
       # next if user.username = "kiaroskuro"
       sheets = service.get_spreadsheet(super_sheet).sheets.collect { |x| x.properties.title }
-      projects = service.get_spreadsheet_values(user.sheet_id, "#{this_month_sheet}!A:D").values
+      begin
+        projects = service.get_spreadsheet_values(user.sheet_id, "#{this_month_sheet}!A:D").values
+      rescue Google::Apis::ClientError
+        next
+      end
       cells = Hash[sheets.map {|x| [x, 0]}]
 
       current_name = nil
