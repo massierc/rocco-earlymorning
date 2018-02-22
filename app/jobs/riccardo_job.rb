@@ -13,9 +13,7 @@ class RiccardoJob < ApplicationJob
 
   def perform(*_args)
     today = Date.today
-    # TODO: Fogli corretti
-    super_sheet = '1g6Rn0cH_u4ViLDLjlnJDEKcT3rPt-7EaveDbdOtK1TY'
-
+    super_sheet = '1RTNQUTh3oLnT1UL7rJgMoQAz5Uuhth99hAYtxWjOKvI'
     service = Authorizer.new(riccardo_uid).service
     sheets = service.get_spreadsheet(super_sheet).sheets.collect { |x| x.properties.title }
 
@@ -66,7 +64,7 @@ class RiccardoJob < ApplicationJob
         end
       end
     end
-
+    RiccardoJob.set(wait_until: DateTime.now.tomorrow.change({hour: 20})).perform_later()
   end
 
   private
