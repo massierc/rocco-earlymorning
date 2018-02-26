@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get 'user/index'
+
   require 'sidekiq/web'
   mount Sidekiq::Web => '/sidekiq'
   telegram_webhook TelegramWebhooksController

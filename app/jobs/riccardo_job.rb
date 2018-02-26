@@ -37,7 +37,7 @@ class RiccardoJob < ApplicationJob
 
       sheets.each do |s|
         projects.each_with_index do |p, i|
-          if p[1].downcase.strip.include?(s.downcase.strip) && p[1]
+          if !p.empty? && p[1].downcase.strip.include?(s.downcase.strip)
             current_name = p[0].capitalize
             cells[s] += p[-1].to_i
           end
