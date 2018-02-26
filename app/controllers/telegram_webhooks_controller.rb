@@ -54,6 +54,15 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     @user.update(setup: 2)
   end
 
+  def nota(*)
+    user_service = Authorizer.new(@message[:from][:id])
+
+    if @message['text'] =~ /nota/i
+      user_service.create_note(@message['text'].gsub("/nota ", ""))
+      respond_with :message, text: "Nota aggiunta correttamente"
+      return
+    end
+  end
   private
 
   def handle_timesheet
@@ -92,7 +101,10 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     when 1
       @user.update(level: 0, howmuch: @message['text'])
       Authorizer.new(@message[:from][:id]).update_timesheet(@user)
-      m = 'Grazie, il tuo TimeSheet è stato aggiornato, se vuoi aggiungere altre ore di lavoro /premimimi!'
+      m = "Grazie, il tuo TimeSheet è stato aggiornato,
+per aggiungere una nota (es):
+/nota Implementazione bug
+se vuoi aggiungere altre ore di lavoro /premimimi!"
       if @user.special
         r = random_rocco
         if r.include?('gif')

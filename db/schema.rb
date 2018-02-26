@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180226115612) do
+ActiveRecord::Schema.define(version: 20180226115932) do
 
   create_table "users", force: :cascade do |t|
     t.integer "uid"
@@ -26,6 +26,7 @@ ActiveRecord::Schema.define(version: 20180226115612) do
     t.datetime "updated_at", null: false
     t.boolean "special", default: false
     t.string "note"
+    t.string "last_cell"
   end
 
 end

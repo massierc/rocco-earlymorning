@@ -71,7 +71,29 @@ class Authorizer
     project_row = find_project_cell(project_cells, user.who, user.what)
 
     service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!#{day_column}#{project_row}", values(user.howmuch), value_input_option: 'USER_ENTERED')
+    user.last_cell = "#{day_column}#{project_row}"
+    user.save!
   end
+
+  def create_note(user = @tg_user, note)
+    sheets = service.get_spreadsheet(user.sheet_id).sheets
+    sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
+
+    requests = []
+    requests.push(
+      repeat_cell: {
+        range: user.last_cell.to_sheet_range(sheet_id),
+        cell: {
+          note: note
+        },
+        fields: "note"
+      }
+    )
+
+    body = {requests: requests}
+    service.batch_update_spreadsheet(user.sheet_id, body, {})
+  end
+
 
   def workday_cells(user = @tg_user)
     begin
