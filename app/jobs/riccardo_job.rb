@@ -46,7 +46,7 @@ class RiccardoJob < ApplicationJob
 
       sheets.each do |s|
         projects.each_with_index do |p, i|
-          if !p.empty? && p[1].downcase.strip.include?(s.downcase.strip)
+          if !p.empty? && p[1].downcase.strip == s.downcase.strip
             current_name = p[0].capitalize
 
             # A2A Case
