@@ -45,27 +45,29 @@ class RiccardoJob < ApplicationJob
       a2a_cells = {}
 
       sheets.each do |s|
+        cells[s] = {} if s =~ /A2A/i
+
         projects.each_with_index do |p, i|
           if !p.empty? && p[1].downcase.strip == s.downcase.strip
             current_name = p[0].capitalize
 
             # A2A Case
-            if p[1] =~ /A2A/i
-              a2a_cells[p[2]] = p[-1].to_i
-              cells[s] = a2a_cells
+            if cells[s].kind_of?(Hash)
+              cells[s][p[2]] = p[-1].to_i
             else
               cells[s] += p[-1].to_i
             end
 
           end
         end
-      end
 
+      end
 
       cells.each do |k,v|
         if v.kind_of?(Hash)
           # A2A Case!
           v.each do |activity,vv|
+            next if vv <= 0
             svalues = service.get_spreadsheet_values(super_sheet, "#{k}!D:G").values
             range = svalues.index([today.year.to_s, today.month.to_s, current_name, activity])
             if range
