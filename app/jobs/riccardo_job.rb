@@ -69,7 +69,7 @@ class RiccardoJob < ApplicationJob
           v.each do |activity,vv|
             next if vv <= 0
             svalues = service.get_spreadsheet_values(super_sheet, "#{k}!D:G").values
-            range = svalues.index([today.year.to_s, today.month.to_s, current_name, activity])
+            range = svalues.index([today.year.to_s, today.month.to_s, current_name, "#{activity} #{today.strftime('%b')}"])
             if range
               range += 1
             else
