@@ -49,7 +49,7 @@ class RiccardoJob < ApplicationJob
 
         projects.each_with_index do |p, i|
           if !p.empty? && p[1].downcase.strip == s.downcase.strip
-            current_name = p[0].capitalize
+            current_name = p[0]
 
             # A2A Case
             if cells[s].kind_of?(Hash)
