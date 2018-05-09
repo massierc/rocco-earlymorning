@@ -45,6 +45,7 @@ gem 'googleauth'
 gem 'google-api-client'
 gem 'sidekiq'
 gem 'sentry-raven'
+gem 'rails-i18n'
 
 group :development, :test do
   gem 'rspec-rails'
