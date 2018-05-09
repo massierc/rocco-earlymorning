@@ -23,7 +23,7 @@ class RiccardoJob < ApplicationJob
     today = Date.today
     month_short = I18n.l(today, format: "%b").capitalize
     service = Authorizer.new(riccardo_uid).service
-    sheets_list = sheets = service.get_spreadsheet(super_sheet).sheets
+    sheets_list = service.get_spreadsheet(super_sheet).sheets
 
     sheets = sheets_list.collect { |x| x.properties.title }
     billable_sheets = sheets[0..sheets.index("Unbillable")-1]
