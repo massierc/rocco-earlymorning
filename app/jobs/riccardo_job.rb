@@ -11,9 +11,9 @@ class RiccardoJob < ApplicationJob
 
     User.find_each do |user|
       # TODO: manage auth fails
-      if user.username == "kiaroskuro"
-        next
-      end
+      # if user.username == "kiaroskuro"
+      #   next
+      # end
 
       begin
         service = Authorizer.new(user.uid).service

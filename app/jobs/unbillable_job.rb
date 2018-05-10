@@ -22,7 +22,8 @@ class UnbillableJob < ApplicationJob
     
     User.find_each do |user|
       # TODO: manage auth fails
-      if user.username == "kiaroskuro"
+      # skip = ["kiaroskuro"]
+      if user.username == "Kaiser_Sose"
         next
       end
 
