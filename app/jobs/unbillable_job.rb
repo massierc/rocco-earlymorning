@@ -41,7 +41,7 @@ class UnbillableJob < ApplicationJob
 
       if range
         unbillable_days = 21 - (billable_hours / 8)
-        unbillable_days = sprintf( "%0.02f", unbillable_days)
+        unbillable_days = unbillable_days.to_s
         nwo_service.update_spreadsheet_value(super_sheet, "Unbillable!O#{range+1}", values([[unbillable_days]]), value_input_option: 'USER_ENTERED')
       end
     end
