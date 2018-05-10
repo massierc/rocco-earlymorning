@@ -40,7 +40,7 @@ class UnbillableJob < ApplicationJob
       range = unbillable_sheet_values.index{ |x| x[0..2] == [today.year.to_s, today.month.to_s, current_name] }
 
       if range
-        unbillable_days = 21 - (billable_hours / 8)
+        unbillable_days = 21 - billable_hours
         unbillable_days = unbillable_days.to_s
         nwo_service.update_spreadsheet_value(super_sheet, "Unbillable!O#{range+1}", values([[unbillable_days]]), value_input_option: 'USER_ENTERED')
       end
