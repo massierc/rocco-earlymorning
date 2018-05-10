@@ -14,23 +14,15 @@ class UnbillableJob < ApplicationJob
     billable_sheets = sheets[0..sheets.index("Unbillable")-1]
     unbillable_sheet_values = nwo_service.get_spreadsheet_values(super_sheet, "Unbillable!D:O").values
 
+    nwo_sheets_values = {}
+
+    billable_sheets.each do |bs|
+      nwo_sheets_values[bs] = nwo_service.get_spreadsheet_values(super_sheet, "#{bs}!D:O").values
+    end
+    
     User.find_each do |user|
       # TODO: manage auth fails
       if user.username == "kiaroskuro"
-        next
-      end
-
-      begin
-        service = Authorizer.new(user.uid).service
-        
-        if service == 0
-          service = Authorizer.new(riccardo_uid).service
-        end
-
-        projects = service.get_spreadsheet_values(user.sheet_id, "#{this_month_sheet}!A:D").values
-        cells = Hash[sheets.map {|x| [x, 0]}]
-      rescue Google::Apis::ClientError => e
-        puts e
         next
       end
 
@@ -38,7 +30,7 @@ class UnbillableJob < ApplicationJob
 
       billable_hours = 0
       billable_sheets.each do |bs|
-        svalues = nwo_service.get_spreadsheet_values(super_sheet, "#{bs}!D:O").values
+        svalues = nwo_sheets_values[bs]
         svalues.each do |x|
           if x[0..2] == [today.year.to_s, today.month.to_s, current_name]
             billable_hours += x[-1].to_f
