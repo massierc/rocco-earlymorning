@@ -22,6 +22,11 @@ class UnbillableJob < ApplicationJob
 
       begin
         service = Authorizer.new(user.uid).service
+        
+        if service == 0
+          service = Authorizer.new(riccardo_uid).service
+        end
+
         projects = service.get_spreadsheet_values(user.sheet_id, "#{this_month_sheet}!A:D").values
         cells = Hash[sheets.map {|x| [x, 0]}]
       rescue Google::Apis::ClientError => e
