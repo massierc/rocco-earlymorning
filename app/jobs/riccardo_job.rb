@@ -4,6 +4,7 @@ class RiccardoJob < ApplicationJob
 
   def perform(*_args)
     today = Date.today
+    I18n.locale = :it
     month_short = I18n.l(today, format: "%b").capitalize
     nwo_service = Authorizer.new(riccardo_uid).service
     sheets_list = nwo_service.get_spreadsheet(super_sheet).sheets
