@@ -32,6 +32,19 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     end
   end
 
+  def unbillable
+    admins = ["gildof", "riccardocattaneo17"]
+    if admins.include? @message['from']['username']
+      UnbillableJob.perform_later
+      respond_with :message, text: "Ciao #{@message['from']['username']}, job Unbillable avviato con successo 💩"
+    else
+      respond_with :message, text: "#{@message['from']['username']} /unbillable è un comando riservato, non sei admin."
+      respond_with :message, text: "L'incidente verrà riportato."
+      sleep(5)
+      respond_with :message, text: "..scherzooo!"
+    end
+  end
+
   def teamrocco(*)
     if @user.special
       @user.update(special: false)
