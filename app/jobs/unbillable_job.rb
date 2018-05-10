@@ -23,8 +23,8 @@ class UnbillableJob < ApplicationJob
     
     User.find_each do |user|
       # TODO: manage auth fails
-      # skip = ["kiaroskuro"]
-      if user.username == "Kaiser_Sose"
+      skip = ["riccardocattaneo17", "Kaiser_Sose"]
+      if skip.include? user.username
         next
       end
 
@@ -51,7 +51,6 @@ class UnbillableJob < ApplicationJob
     ss = Sidekiq::ScheduledSet.new
     jobs = ss.select {|job| job["wrapped"] == 'UnbillableJob' }
     jobs.each(&:delete)
-
   end
 
   private
