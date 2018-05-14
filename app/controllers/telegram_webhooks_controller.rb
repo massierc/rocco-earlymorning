@@ -52,6 +52,8 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       lazy = User.where("updated_at < ?", 1.day.ago).collect do
         |u| "#{!u.name.blank? ? u.name : u.username} - #{u.updated_at} "
       end.join("\n")
+
+      respond_with :message, text: lazy
     else
       respond_with :message, text: "#{@message['from']['username']} /pigri è un comando riservato, non sei admin."
       respond_with :message, text: "L'incidente verrà riportato."
