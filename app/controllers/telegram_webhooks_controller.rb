@@ -49,8 +49,10 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     admins = ["gildof", "riccardocattaneo17"]
     if admins.include? @message['from']['username']
       respond_with :message, text: "Ciao #{@message['from']['username']}, ecco i pigri di oggi: "
-      lazy = User.where("updated_at < ?", 1.day.ago).collect do
-        |u| "#{!u.name.blank? ? u.name : u.username} - #{u.updated_at} "
+      I18n.locale = :it
+      lazy = User.where("updated_at < ?", 1.day.ago).collect do |u|
+        data = I18n.l(DateTime.now, format: "%A %d %B")
+        "#{!u.name.blank? ? u.name : u.username} - #{data}"
       end.join("\n")
 
       respond_with :message, text: lazy
