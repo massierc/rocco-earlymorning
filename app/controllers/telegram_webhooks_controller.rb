@@ -45,6 +45,21 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     end
   end
 
+  def pigri
+    admins = ["gildof", "riccardocattaneo17"]
+    if admins.include? @message['from']['username']
+      respond_with :message, text: "Ciao #{@message['from']['username']}, ecco i pigri di oggi: "
+      lazy = User.where("updated_at < ?", 1.day.ago).collect do
+        |u| "#{!u.name.blank? ? u.name : u.username} - #{u.updated_at} "
+      end.join("\n")
+    else
+      respond_with :message, text: "#{@message['from']['username']} /pigri è un comando riservato, non sei admin."
+      respond_with :message, text: "L'incidente verrà riportato."
+      sleep(5)
+      respond_with :message, text: "..scherzooo!"
+    end
+  end
+
   def teamrocco(*)
     if @user.special
       @user.update(special: false)
