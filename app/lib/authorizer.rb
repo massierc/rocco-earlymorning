@@ -222,8 +222,8 @@ class Authorizer
           end_index: cell_index+1
         },
         inherit_before: true
-      },
-    )
+      })
+
     body = {requests: requests}
 
     service.batch_update_spreadsheet(user.sheet_id, body, {})
@@ -236,6 +236,37 @@ class Authorizer
     service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!B#{cell_index}", values(data[:project][:value]), value_input_option: 'USER_ENTERED')
     service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!C#{cell_index}", values(data[:activity][:value]), value_input_option: 'USER_ENTERED')
     service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!D#{cell_index}", values("=SUM(E#{cell_index}:AL#{cell_index})"), value_input_option: 'USER_ENTERED')
+
+    requests = []
+
+    requests.push({
+      repeat_cell: {
+        range: {
+          sheet_id: sheet_id,
+          start_row_index: cell_index-1,
+          end_row_index: cell_index,
+          start_column_index: 1,
+          end_column_index: 2
+        },
+        cell: {
+          user_entered_format: {
+            text_format: {
+              foreground_color: {
+                red: 1.0,
+                green: 0.0,
+                blue: 0.0
+              },
+              bold: true
+            }
+          }
+        },
+        fields: "userEnteredFormat(textFormat)"
+      }
+    })
+    body = {requests: requests}
+    service.batch_update_spreadsheet(user.sheet_id, body, {})
+
+
   end
 
   def workday?(user = @tg_user)
