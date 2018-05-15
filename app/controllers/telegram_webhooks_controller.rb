@@ -50,8 +50,10 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     if admins.include? @message['from']['username']
       respond_with :message, text: "Ciao #{@message['from']['username']}, ecco la lista: "
       I18n.locale = :it
+      skips = ["FilippoLocoro", "kiaroskuro"]
       lazy = User.all.order(updated_at: :desc).collect do |u|
         data = I18n.l(u.updated_at.to_datetime, format: "%A %d %B %H:%M")
+        next if skips.include?(u.username)
         "#{!u.name.blank? ? u.name : u.username} - #{data}"
       end.join("\n")
 
