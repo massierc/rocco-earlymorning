@@ -157,10 +157,8 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
       if @user.special
         r = random_rocco
         if r.include?('gif')
-          puts 'found gif'
           respond_with :document, document: File.open(r), caption: m
         else
-          puts 'found photo'
           respond_with :photo, photo: File.open(r), caption: m
         end
       else
