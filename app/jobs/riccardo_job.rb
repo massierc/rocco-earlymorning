@@ -41,9 +41,9 @@ class RiccardoJob < ApplicationJob
             user.save
 
             if cells[s].kind_of?(Hash)
-              cells[s][p[2]] = p[-1].to_i
+              cells[s][p[2]] = p[-1].to_f
             else
-              cells[s] += p[-1].to_i
+              cells[s] += p[-1].to_f
             end
 
           end
