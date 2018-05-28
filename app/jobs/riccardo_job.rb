@@ -78,6 +78,7 @@ class RiccardoJob < ApplicationJob
     jobs.each(&:delete)
     RiccardoJob.set(wait_until: DateTime.now.tomorrow.change({hour: 20})).perform_later( )
     UnbillableJob.set(wait: 2.minutes).perform_later( )
+    bot = Telegram.bot
 
     bot.send_message(chat_id: riccardo_uid, text: 'NWO Completato')
   end

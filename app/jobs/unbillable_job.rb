@@ -3,6 +3,8 @@ class UnbillableJob < ApplicationJob
   include Utils
 
   def perform(*args)
+    bot = Telegram.bot
+
     bot.send_message(chat_id: riccardo_uid, text: 'Unbillable Start...')
 
     today = Date.today
