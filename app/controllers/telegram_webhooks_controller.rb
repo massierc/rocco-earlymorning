@@ -7,7 +7,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   def set_user
     @message = ActiveSupport::HashWithIndifferentAccess.new(payload)
-    @user = User.find_or_create_by(uid: @message['from']['id'], username: @message['from']['username'])
+    @user = User.find_or_initialize_by(uid: @message['from']['id'], username: @message['from']['username'])
+    if not @user.persisted?
+      @user.setup = 3
+    end
+    @user.save
   end
 
   def premimimi
@@ -87,9 +91,17 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   def message(_message)
     if @user.setup > 0
-      handle_setup
+      if @user.setup == 3
+        start
+      else
+        handle_setup
+      end
     else
-      handle_timesheet
+      if @user.company_id == 0
+        handle_timesheet
+      else
+        handle_worksession
+      end
     end
   end
 
@@ -115,6 +127,51 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   private
+
+  def handle_worksession
+    user_service = Authorizer.new(@message[:from][:id])
+    user_projects = user_service.project_cells
+
+    if @message['text'] =~ /stop/i
+      @ws = @user.work_sessions.find_by_end_date(nil)
+      if @ws.nil?
+        respond_with :message, text: "Nessuna sessione attiva"
+      else
+        @ws.update(end_date: DateTime.now)
+      end
+      respond_with :message, text: "Sessione #{@ws.client} - #{@ws.activity} delle #{@ws.start_date.strftime("%H:%M")} chiusa dopo #{@ws.duration_in_words}, vuoi lavorare ad altro?"
+      @user.update(level: 0)
+      return
+    end
+
+    case @user.level
+    when 0
+      respond_with :message, text: 'A cosa stai lavorando?', reply_markup: {
+        keyboard: user_projects,
+        resize_keyboard: true,
+        one_time_keyboard: true,
+        selective: true,
+      }
+      @user.update(level: 3)
+
+    when 3
+      @user.update(level: 2, who: @message['text'])
+
+      activities = user_service.list_activities(user_projects, @user.who)
+      respond_with :message, text: 'Quale activity?', reply_markup: {
+        keyboard: [activities],
+        resize_keyboard: true,
+        one_time_keyboard: true,
+        selective: true
+      }
+    when 2
+      @user.update(level: 0, what: @message['text'])
+      # Authorizer.new(@message[:from][:id]).update_timesheet(@user)
+      @user.work_sessions.create(start_date: DateTime.now, client: @user.who, activity: @user.what)
+      m = "Timer avviato, buon lavoro!"
+      respond_with :message, text: m
+    end
+  end
 
   def handle_timesheet
     user_service = Authorizer.new(@message[:from][:id])
@@ -171,6 +228,24 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
 
   def handle_setup
     case @user.setup
+    when 4
+      if ["EM","EMF"].include? @message['text'].upcase.chomp
+        if @message['text'] == "EM"
+          @user.update(company_id: 1)
+          respond_with :message, text: 'Grazie mille, il setup è completo!'
+        else
+          @user.update(company_id: 0)
+          respond_with :message, text: 'Grazie mille, ti contatterò alle 18:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
+        end
+        @user.update(setup: 0)
+      else
+        respond_with :message, text: 'Scusa non ho capito, sei EM o EM Finance (EM/EMF)', reply_markup: {
+          keyboard: [["EM", "EMF"]],
+          resize_keyboard: true,
+          one_time_keyboard: true,
+          selective: true
+        }
+      end
     when 2
       @auth = Authorizer.new(@message['from']['id']).store_auth(@message[:text])
       if @auth == 0 || @auth.nil?
@@ -186,13 +261,23 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
     when 1
       sheet_id = @message['text'].split('/').max_by(&:length)
       @user.update(sheet_id: sheet_id)
-      @user.update(setup: 0)
+      @user.update(setup: 4)
 
-      next_business_day = next_business_day(DateTime.now)
-      next_business_day = DateTime.new(next_business_day.year, next_business_day.month, next_business_day.mday, 18, 00)
-      job = AskJob.set(wait_until: next_business_day).perform_later(@user.uid)
+      if @company_id == 0 
+        next_business_day = next_business_day(DateTime.now)
+        next_business_day = DateTime.new(next_business_day.year, next_business_day.month, next_business_day.mday, 18, 00)
+        job = AskJob.set(wait_until: next_business_day).perform_later(@user.uid)
+      end
+
       @user.update(jid: job.job_id, level: 3)
-      respond_with :message, text: 'Grazie mille, ti contatterò alle 18:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
+      
+      respond_with :message, text: 'Grazie mille, ora mi serve solo sapere se lavori per EM o EM Finance', reply_markup: {
+        keyboard: [["EM", "EMF"]],
+        resize_keyboard: true,
+        one_time_keyboard: true,
+        selective: true
+      }
+
     end
   end
 
