@@ -3,10 +3,6 @@ class UnbillableJob < ApplicationJob
   include Utils
 
   def perform(*args)
-    bot = Telegram.bot
-
-    bot.send_message(chat_id: riccardo_uid, text: 'Unbillable Start...')
-
     today = Date.today
     I18n.locale = :it
 
@@ -54,8 +50,6 @@ class UnbillableJob < ApplicationJob
     ss = Sidekiq::ScheduledSet.new
     jobs = ss.select {|job| job["wrapped"] == 'UnbillableJob' }
     jobs.each(&:delete)
-
-    bot.send_message(chat_id: riccardo_uid, text: 'Unbillable End.')
   end
 
   private
