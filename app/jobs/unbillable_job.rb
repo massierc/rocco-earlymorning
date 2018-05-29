@@ -15,7 +15,11 @@ class UnbillableJob < ApplicationJob
 
     sheets = sheets_list.collect { |x| x.properties.title }
     unbillable_sheets = nwo_service.get_spreadsheet_values(super_sheet, "EXPORT!B:C").values
-    unbillable_sheets = unbillable_sheets.map{|x| x[0] if x[1]&.downcase == "x"}.compact
+
+    unbillable_sheets = unbillable_sheets.map do |x|
+      x[0] if x[1]&.downcase == "x" && x[0]&.downcase.chomp != "unbillable"
+    end.compact
+    
     unbillable_sheet_values = nwo_service.get_spreadsheet_values(super_sheet, "Unbillable!D:O").values
     bot.send_message(chat_id: User.find_by_username("gildof").uid, text: unbillable_sheets.to_s)
 
