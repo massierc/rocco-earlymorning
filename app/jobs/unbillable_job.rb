@@ -16,7 +16,6 @@ class UnbillableJob < ApplicationJob
     sheets = sheets_list.collect { |x| x.properties.title }
     unbillable_sheets = nwo_service.get_spreadsheet_values(super_sheet, "EXPORT!B:C").values
     unbillable_sheets = unbillable_sheets.map{|x| x[0] if x[1]&.downcase == "x"}.compact
-    byebug
     unbillable_sheet_values = nwo_service.get_spreadsheet_values(super_sheet, "Unbillable!D:O").values
     
     nwo_sheets_values = {}
