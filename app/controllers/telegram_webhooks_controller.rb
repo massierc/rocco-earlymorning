@@ -14,6 +14,10 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     @user.save
   end
 
+  def callback_query(data)
+    respond_with :message, text: data
+  end
+
   def premimimi
     if @user.setup > 0
       handle_setup
@@ -132,6 +136,8 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     user_service = Authorizer.new(@message[:from][:id])
     user_projects = user_service.project_cells
 
+
+    # TODO: If active worksession don't do nothing
     if @message['text'] =~ /stop/i
       @ws = @user.work_sessions.find_by_end_date(nil)
       if @ws.nil?
