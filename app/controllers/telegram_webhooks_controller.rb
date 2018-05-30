@@ -15,7 +15,19 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def callback_query(data)
-    respond_with :message, text: data
+    def manage_timer(data)
+      case data
+      when "yes"
+       respond_with :message, text: "Buon lavoro ;) "
+      when "no"
+        end_worksession
+      when "lunch"
+        end_worksession
+        create_lunch
+      end
+    end
+    manage_timer(data)
+    answer_callback_query "OK"
   end
 
   def premimimi
@@ -132,6 +144,23 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   private
 
+  def end_worksession
+    @ws = @user.active_worksession
+    if @ws.nil?
+      respond_with :message, text: "Nessuna sessione attiva"
+    else
+      @ws.update(end_date: DateTime.now)
+    end
+    respond_with :message, text: "Sessione #{@ws.client} - #{@ws.activity} delle #{@ws.start_date.strftime("%H:%M")} chiusa dopo #{@ws.duration_in_words}, vuoi lavorare ad altro?"
+    @user.update(level: 0)
+  end
+
+  def create_lunch
+    @user.work_sessions.create(start_date: DateTime.now, client: "Pranzo", activity: "")
+    m = "Timer avviato, buon pranzo!"
+    respond_with :message, text: m
+  end
+
   def handle_worksession
     user_service = Authorizer.new(@message[:from][:id])
     user_projects = user_service.project_cells
@@ -139,14 +168,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
     # TODO: If active worksession don't do nothing
     if @message['text'] =~ /stop/i
-      @ws = @user.work_sessions.find_by_end_date(nil)
-      if @ws.nil?
-        respond_with :message, text: "Nessuna sessione attiva"
-      else
-        @ws.update(end_date: DateTime.now)
-      end
-      respond_with :message, text: "Sessione #{@ws.client} - #{@ws.activity} delle #{@ws.start_date.strftime("%H:%M")} chiusa dopo #{@ws.duration_in_words}, vuoi lavorare ad altro?"
-      @user.update(level: 0)
+      end_worksession
       return
     end
 

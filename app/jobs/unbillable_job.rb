@@ -2,7 +2,6 @@ class UnbillableJob < ApplicationJob
   queue_as :default
   include Utils
 
-
   def perform(*args)
     today = Date.today
     I18n.locale = :it

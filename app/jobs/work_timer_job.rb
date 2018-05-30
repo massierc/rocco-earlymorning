@@ -21,20 +21,26 @@ class WorkTimerJob < ApplicationJob
     # project_list  = user_service.list_projects(user_projects)
     # user.update(level: 3)
 
-    timer_text = "Stai ancora lavorando a #{ws.client}-#{ws.activity} ?"
+    if ws.client == "Pranzo"
+      timer_text = "Sei ancora a pranzo?"
+    else
+      timer_text = "Stai ancora lavorando a #{ws.client}-#{ws.activity} ?"
+    end
+  
     timer_options = [
-        {text: "Sì", callback_data: 'yes'},
-        {text: "No", callback_data: 'no'},
-        {text: "Bye", callback_data: 'bye'},
+      {text: "Sì", callback_data: 'yes'},
+      {text: "No", callback_data: 'no'},
+      {text: "Bye", callback_data: 'bye'},
     ]
 
     start_lunch = Time.now.change(hour: 12, min: 25)
     end_lunch = Time.now.change(hour: 14, min: 15)
 
-    if Time.now.between?(start_lunch, end_lunch)
-      timer_text += " o sei a **PRANZO**?"
-      timer_options << {text: "PRANZO", callback_data: 'lunch'}
+    if Time.now.between?(start_lunch, end_lunch) && ws.lunch?
+      timer_text += " o sei a PRANZO?"
+      timer_options.unshift({text: "PRANZO", callback_data: 'lunch'})
     end
+
     bot.send_message(chat_id: user.uid, text: timer_text, reply_markup: {
       inline_keyboard: [
         timer_options
