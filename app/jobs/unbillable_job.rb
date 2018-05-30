@@ -3,6 +3,9 @@ class UnbillableJob < ApplicationJob
   include Utils
 
   def perform(*args)
+    bot = Telegram.bot
+    bot.send_message(chat_id: riccardo_uid, text: 'Unbillable Start...')
+
     today = Date.today
     I18n.locale = :it
 
@@ -11,12 +14,18 @@ class UnbillableJob < ApplicationJob
     sheets_list = nwo_service.get_spreadsheet(super_sheet).sheets
 
     sheets = sheets_list.collect { |x| x.properties.title }
-    billable_sheets = sheets[sheets.index("Unbillable")..-1]
+    unbillable_sheets = nwo_service.get_spreadsheet_values(super_sheet, "EXPORT!B:C").values
+
+    unbillable_sheets = unbillable_sheets.map do |x|
+      x[0] if x[1]&.downcase == "x" && x[0]&.downcase.chomp != "unbillable"
+    end.compact
+    
     unbillable_sheet_values = nwo_service.get_spreadsheet_values(super_sheet, "Unbillable!D:O").values
+    bot.send_message(chat_id: User.find_by_username("gildof").uid, text: unbillable_sheets.to_s)
 
     nwo_sheets_values = {}
 
-    billable_sheets.each do |bs|
+    unbillable_sheets.each do |bs|
       nwo_sheets_values[bs] = nwo_service.get_spreadsheet_values(super_sheet, "#{bs}!D:O").values
     end
     
@@ -30,7 +39,7 @@ class UnbillableJob < ApplicationJob
       current_name = user.name
 
       billable_hours = 0
-      billable_sheets.each do |bs|
+      unbillable_sheets.each do |bs|
         svalues = nwo_sheets_values[bs]
         svalues.each do |x|
           if x[0..2] == [today.year.to_s, today.month.to_s, current_name]
@@ -50,6 +59,8 @@ class UnbillableJob < ApplicationJob
     ss = Sidekiq::ScheduledSet.new
     jobs = ss.select {|job| job["wrapped"] == 'UnbillableJob' }
     jobs.each(&:delete)
+
+    bot.send_message(chat_id: riccardo_uid, text: 'Unbillable End.')
   end
 
   private

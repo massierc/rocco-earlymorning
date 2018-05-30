@@ -41,9 +41,9 @@ class RiccardoJob < ApplicationJob
             user.save
 
             if cells[s].kind_of?(Hash)
-              cells[s][p[2]] = p[-1].to_i
+              cells[s][p[2]] = p[-1].to_f
             else
-              cells[s] += p[-1].to_i
+              cells[s] += p[-1].to_f
             end
 
           end
@@ -77,6 +77,9 @@ class RiccardoJob < ApplicationJob
     jobs = ss.select {|job| job["wrapped"] == 'RiccardoJob' }
     jobs.each(&:delete)
     RiccardoJob.set(wait_until: DateTime.now.tomorrow.change({hour: 20})).perform_later( )
+    UnbillableJob.set(wait: 2.minutes).perform_later( )
+    bot = Telegram.bot
+    bot.send_message(chat_id: riccardo_uid, text: 'NWO Completato')
   end
 
   private
