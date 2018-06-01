@@ -22,8 +22,12 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       when "no"
         end_worksession
       when "lunch"
-        end_worksession
+        end_worksession(lunch=true)
         create_lunch
+      when "bye"
+        end_worksession(bye=true)
+        respond_with :message, text:  "OK, tra poco aggiorno il tuo TimeSheet, buona giornata!"
+        @user.delay.update_timesheets
       end
     end
     manage_timer(data)
@@ -71,7 +75,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       respond_with :message, text: "Ciao #{@message['from']['username']}, ecco la lista: "
       I18n.locale = :it
       skips = ["FilippoLocoro", "kiaroskuro"]
-      lazy = User.all.order(updated_at: :desc).collect do |u|
+      lazy = User.where(company_id: 0).order(updated_at: :desc).collect do |u|
         data = I18n.l(u.updated_at.to_datetime, format: "%A %d %B %H:%M")
         next if skips.include?(u.username)
         "#{!u.name.blank? ? u.name : u.username} - #{data}"
@@ -144,15 +148,19 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   private
 
-  def end_worksession
+  def end_worksession(bye=false)
     @ws = @user.active_worksession
-    if @ws.nil?
+    if @ws.nil? && bye==false
       respond_with :message, text: "Nessuna sessione attiva"
+    elsif bye
+      return
     else
-      @ws.update(end_date: DateTime.now)
+      @ws.stop_job
+      if not bye
+        @message['text'] = "Hellooooooooo!"
+        handle_worksession
+      end
     end
-    respond_with :message, text: "Sessione #{@ws.client} - #{@ws.activity} delle #{@ws.start_date.strftime("%H:%M")} chiusa dopo #{@ws.duration_in_words}, vuoi lavorare ad altro?"
-    @user.update(level: 0)
   end
 
   def create_lunch
@@ -162,38 +170,44 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def handle_worksession
-    user_service = Authorizer.new(@message[:from][:id])
-    user_projects = user_service.project_cells
-
-
     # TODO: If active worksession don't do nothing
     if @message['text'] =~ /stop/i
       end_worksession
       return
     end
 
+    user_service = Authorizer.new(@message[:from][:id])
+    user_projects = user_service.project_cells
+    project_list  = user_service.list_projects(user_projects)
+
     case @user.level
-    when 0
-      respond_with :message, text: 'A cosa stai lavorando?', reply_markup: {
-        keyboard: user_projects,
+    when 4
+      respond_with :message, text: 'Vuoi fermare il timer o vai a casa?', reply_markup: {
+        keyboard: [['stop']],
         resize_keyboard: true,
         one_time_keyboard: true,
         selective: true,
       }
+    when 3
+      respond_with :message, text: 'A cosa stai lavorando?', reply_markup: {
+        keyboard: project_list,
+        resize_keyboard: true,
+        one_time_keyboard: true,
+        selective: true,
+      }
+      @user.update(level: 2, what: @message['text'])
+
+    when 0
       @user.update(level: 3)
 
-    when 3
-      @user.update(level: 2, who: @message['text'])
-
-      activities = user_service.list_activities(user_projects, @user.who)
-      respond_with :message, text: 'Quale activity?', reply_markup: {
-        keyboard: [activities],
+      respond_with :message, text: 'Da dove lavori oggi?', reply_markup: {
+        keyboard: [["Remoto", "Ufficio", "Cliente"]],
         resize_keyboard: true,
         one_time_keyboard: true,
         selective: true
       }
     when 2
-      @user.update(level: 0, what: @message['text'])
+      @user.update(level: 4, who: @message['text'])
       # Authorizer.new(@message[:from][:id]).update_timesheet(@user)
       @user.work_sessions.create(start_date: DateTime.now, client: @user.who, activity: @user.what)
       m = "Timer avviato, buon lavoro!"
@@ -226,7 +240,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     when 2
       @user.update(level: 1, what: @message['text'])
 
-      activities = user_service.list_activities(user_projects, @user.who)
+      # activities = user_service.list_activities(user_projects, @user.who)
       respond_with :message, text: 'E per quanto tempo?', reply_markup: {
         keyboard: [[@user.howmuch.to_s, '8'], ['stop']],
         resize_keyboard: true,
@@ -265,7 +279,16 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
           @user.update(company_id: 0)
           respond_with :message, text: 'Grazie mille, ti contatterò alle 18:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
         end
-        @user.update(setup: 0)
+
+        if @user.company_id == 0 
+          next_business_day = next_business_day(DateTime.now)
+          next_business_day = DateTime.new(next_business_day.year, next_business_day.month, next_business_day.mday, 18, 00)
+          job = AskJob.set(wait_until: next_business_day).perform_later(@user.uid)
+          @user.update(jid: job.job_id, level: 3)
+        else
+          @user.update(level: 0)
+        end
+
       else
         respond_with :message, text: 'Scusa non ho capito, sei EM o EM Finance (EM/EMF)', reply_markup: {
           keyboard: [["EM", "EMF"]],
@@ -291,14 +314,6 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
       @user.update(sheet_id: sheet_id)
       @user.update(setup: 4)
 
-      if @company_id == 0 
-        next_business_day = next_business_day(DateTime.now)
-        next_business_day = DateTime.new(next_business_day.year, next_business_day.month, next_business_day.mday, 18, 00)
-        job = AskJob.set(wait_until: next_business_day).perform_later(@user.uid)
-      end
-
-      @user.update(jid: job.job_id, level: 3)
-      
       respond_with :message, text: 'Grazie mille, ora mi serve solo sapere se lavori per EM o EM Finance', reply_markup: {
         keyboard: [["EM", "EMF"]],
         resize_keyboard: true,

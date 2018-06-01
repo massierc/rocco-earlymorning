@@ -32,6 +32,9 @@ module Rocco
     config.active_job.queue_adapter = :sidekiq
   end
 end
+
 Raven.configure do |config|
   config.dsn = 'https://8950a242a8b54ed0855cac210682cd7c:700544d635974c4e8e9f5f89eb0962ad@sentry.io/291858'
 end
+
+Sidekiq::Extensions.enable_delay!

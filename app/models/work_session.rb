@@ -8,7 +8,15 @@ class WorkSession < ApplicationRecord
   I18n.locale = :it
   
   def duration
-    end_date - start_date
+    (end_date - start_date)
+  end
+
+  def duration_in_minutes
+    duration / 1.minutes
+  end
+  
+  def duration_in_hours
+    duration_in_minutes / 60
   end
 
   def duration_in_words
@@ -20,17 +28,37 @@ class WorkSession < ApplicationRecord
   end
 
   def stop_previous_jobs
-    user.work_sheets.where(date_end: nil).find_each do |wa|
+    user.work_sessions.where(end_date: nil).find_each do |wa|
       ws.stop_job
     end
   end
 
   def stop_job
-    self.end_job = DateTime.now
-    self.save
+    if self.end_date.nil?
+      self.end_date = DateTime.now
+      self.save
+      bot = Telegram.bot
+
+      text = "Sessione #{self.client} - #{self.activity} delle #{self.start_date.strftime("%H:%M")} chiusa dopo #{self.duration_in_words}"
+
+      bot.send_message(chat_id: user.uid, text: text)
+      user.update(level: 0)
+    else
+      text = "La sessione #{self.client} - #{self.activity} delle #{self.start_date.strftime("%H:%M")} era già stata chiusa alle #{self.end_date.strftime("%H:%M")}"
+      bot.send_message(chat_id: user.uid, text: text)
+    end
   end
 
   def start_job
+    ss = Sidekiq::ScheduledSet.new
+    ss.select do |s|
+      if s.item["args"][0].class == Hash
+        s.item["args"][0]["arguments"].include? (self.user.id)
+      else
+        s.item["args"][0] == self.user.id
+      end
+    end.each(&:delete)
+
     if lunch?
       WorkTimerJob.set(wait: 60.minutes).perform_later(user.id)
     else
