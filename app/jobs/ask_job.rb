@@ -3,6 +3,7 @@ class AskJob < ApplicationJob
   queue_as :default
 
   def perform(uid)
+    # test gitlab
     # remove previous jobs
     ss = Sidekiq::ScheduledSet.new
     ss.select do |s|
