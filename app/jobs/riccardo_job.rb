@@ -10,7 +10,7 @@ class RiccardoJob < ApplicationJob
     sheets_list = nwo_service.get_spreadsheet(super_sheet).sheets
     sheets = sheets_list.collect { |x| x.properties.title }
 
-    User.find_each do |user|
+    User.where(company_id: 0).each do |user|
       # TODO: manage auth fails
       # if user.username == "kiaroskuro"
       #   next

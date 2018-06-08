@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180510090404) do
+ActiveRecord::Schema.define(version: 20180523154316) do
 
   create_table "users", force: :cascade do |t|
     t.integer "uid"
@@ -28,6 +28,18 @@ ActiveRecord::Schema.define(version: 20180510090404) do
     t.string "note"
     t.string "last_cell"
     t.string "name"
+    t.integer "company_id"
+  end
+
+  create_table "work_sessions", force: :cascade do |t|
+    t.integer "user_id"
+    t.datetime "start_date"
+    t.datetime "end_date"
+    t.string "client"
+    t.string "activity"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_work_sessions_on_user_id"
   end
 
 end

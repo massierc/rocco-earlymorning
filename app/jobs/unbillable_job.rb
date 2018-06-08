@@ -21,7 +21,7 @@ class UnbillableJob < ApplicationJob
     end.compact
     
     unbillable_sheet_values = nwo_service.get_spreadsheet_values(super_sheet, "Unbillable!D:O").values
-    bot.send_message(chat_id: User.find_by_username("gildof").uid, text: unbillable_sheets.to_s)
+    bot.send_message(chat_id: User.find_by_username("gildof").uid, text: "Riccardo ha lanciato Unbillable")
 
     nwo_sheets_values = {}
 
