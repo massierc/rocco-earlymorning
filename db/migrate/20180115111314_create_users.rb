@@ -9,7 +9,7 @@ class CreateUsers < ActiveRecord::Migration[5.1]
       t.string :username
       t.string :sheet_id
       t.string :jid
-      t.integer :setup, default: 2
+      t.integer :setup, default: 3
       t.timestamps
     end
   end
