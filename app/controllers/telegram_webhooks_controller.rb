@@ -164,7 +164,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def create_lunch
-    @user.work_sessions.create(start_date: DateTime.now, client: "Pranzo", activity: "")
+    @user.work_sessions.create(start_date: DateTime.current, client: "Pranzo", activity: "")
     m = "Timer avviato, buon pranzo!"
     respond_with :message, text: m
   end
@@ -209,7 +209,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     when 2
       @user.update(level: 4, who: @message['text'])
       # Authorizer.new(@message[:from][:id]).update_timesheet(@user)
-      @user.work_sessions.create(start_date: DateTime.now, client: @user.who, activity: @user.what)
+      @user.work_sessions.create(start_date: DateTime.current, client: @user.who, activity: @user.what)
       m = "Timer avviato, buon lavoro!"
       respond_with :message, text: m
     end
@@ -220,7 +220,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     user_projects = user_service.project_cells
 
     if @message['text'] =~ /stop/i
-      respond_with :message, text: "Richiesta fermata, see you #{next_business_day(DateTime.now).strftime('%A')}"
+      respond_with :message, text: "Richiesta fermata, see you #{next_business_day(DateTime.current).strftime('%A')}"
       @user.update(level: 0)
       return
     end
@@ -280,8 +280,8 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
           respond_with :message, text: 'Grazie mille, ti contatterò alle 18:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
         end
 
-        if @user.company_id == 0 
-          next_business_day = next_business_day(DateTime.now)
+        if @user.company_id == 0
+          next_business_day = next_business_day(DateTime.current)
           next_business_day = DateTime.new(next_business_day.year, next_business_day.month, next_business_day.mday, 18, 00)
           job = AskJob.set(wait_until: next_business_day).perform_later(@user.uid)
           @user.update(jid: job.job_id, level: 3)

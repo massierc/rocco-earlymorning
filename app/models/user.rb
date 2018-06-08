@@ -5,7 +5,7 @@ class User < ApplicationRecord
     self.work_sessions.find_by_end_date(nil)
   end
 
-  def update_timesheets(date=Time.now)
+  def update_timesheets(date=Time.current)
     date_sessions = self.work_sessions.where(created_at: date.beginning_of_day..date.end_of_day)
     same_sessions = date_sessions.group_by do |ws|
       [ws.client, ws.activity]

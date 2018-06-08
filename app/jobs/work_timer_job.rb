@@ -13,18 +13,18 @@ class WorkTimerJob < ApplicationJob
       else
         timer_text = "Stai ancora lavorando a #{ws.client}-#{ws.activity} ?"
       end
-    
+
       timer_options = [
         {text: "Sì", callback_data: 'yes'},
         {text: "No", callback_data: 'no'},
         {text: "Bye", callback_data: 'bye'},
       ]
 
-      start_lunch = Time.now.change(hour: 12, min: 25)
-      end_lunch = Time.now.change(hour: 14, min: 15)
+      start_lunch = Time.current.change(hour: 12, min: 25)
+      end_lunch = Time.current.change(hour: 14, min: 15)
 
-      puts Time.now
-      if Time.now.between?(start_lunch, end_lunch) && !ws.lunch?
+      puts Time.current
+      if Time.current.between?(start_lunch, end_lunch) && !ws.lunch?
         puts "SISISI"
         timer_text += " o sei a PRANZO?"
         timer_options.unshift({text: "PRANZO", callback_data: 'lunch'})
