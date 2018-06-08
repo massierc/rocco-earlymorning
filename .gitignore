@@ -16,3 +16,6 @@
 .byebug_history
 \nconfig/database.yml
 \nspec/examples.txt
+
+db/rocco_development
+credentials/*

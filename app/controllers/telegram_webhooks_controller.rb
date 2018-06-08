@@ -132,7 +132,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
       activities = user_service.list_activities(user_projects, @user.who)
       respond_with :message, text: 'Quale activity?', reply_markup: {
-        keyboard: [activities],
+        keyboard: activities,
         resize_keyboard: true,
         one_time_keyboard: true,
         selective: true
