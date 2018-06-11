@@ -90,8 +90,11 @@ class Authorizer
       project_row = find_project_cell(project_cells, ws[0], ws[1])
       service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!#{day_column}#{project_row}", values(ws[2]), value_input_option: 'USER_ENTERED')
       
-      project_row_pm = find_project_cell_with_name(project_cells_with_name, ws[0], ws[1], user.name)
-      service.update_spreadsheet_value(user.sheet_id, "PM!#{day_column}#{project_row_pm}", values(ws[2]), value_input_option: 'USER_ENTERED')
+      pm_auth = Authorizer.new(giudditta_uid)
+      pm_service = pm_auth.service
+      # byebug
+      project_row_pm = pm_auth.find_project_cell_with_name(pm_auth.project_cells_with_name, ws[0], ws[1], user.name)
+      pm_service.update_spreadsheet_value(em_pm_sheet, "#{this_month_sheet}!#{day_column}#{project_row_pm}", values(ws[2]), value_input_option: 'USER_ENTERED')
     end
   end
 
@@ -150,8 +153,10 @@ class Authorizer
   end
 
   def project_cells_with_name(sheet_id = @tg_user.sheet_id)
+    # byebug
+    sheet_id = em_pm_sheet
     begin
-      projects = service.get_spreadsheet_values(sheet_id, "PM!A:C").values
+      projects = service.get_spreadsheet_values(sheet_id, "#{this_month_sheet}!A:C").values
     rescue Google::Apis::ClientError
       return false
     end
@@ -242,8 +247,8 @@ class Authorizer
 
 
   def create_missing_row_with_name(user = @tg_user, data)
-    sheets = service.get_spreadsheet(user.sheet_id).sheets
-    sheet_id = sheets.find {|s| s.properties.title == "PM"}.properties.sheet_id
+    sheets = service.get_spreadsheet(em_pm_sheet).sheets
+    sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
 
     cell_index = project_cells_with_name.find_index { |arr| arr.include? data[:name][:value] } + 1
 
@@ -261,17 +266,16 @@ class Authorizer
 
     body = {requests: requests}
 
-    service.batch_update_spreadsheet(user.sheet_id, body, {})
+    service.batch_update_spreadsheet(em_pm_sheet, body, {})
 
     name = user.name
 
     cell_index += 1
 
-    service.update_spreadsheet_value(user.sheet_id, "PM!A#{cell_index}", values(name), value_input_option: 'USER_ENTERED')
-    service.update_spreadsheet_value(user.sheet_id, "PM!B#{cell_index}", values(data[:project][:value]), value_input_option: 'USER_ENTERED')
-    service.update_spreadsheet_value(user.sheet_id, "PM!C#{cell_index}", values(data[:activity][:value]), value_input_option: 'USER_ENTERED')
-    service.update_spreadsheet_value(user.sheet_id, "PM!D#{cell_index}", values("=SUM(E#{cell_index}:AL#{cell_index})"), value_input_option: 'USER_ENTERED')
-
+    service.update_spreadsheet_value(em_pm_sheet, "#{this_month_sheet}!A#{cell_index}", values(name), value_input_option: 'USER_ENTERED')
+    service.update_spreadsheet_value(em_pm_sheet, "#{this_month_sheet}!B#{cell_index}", values(data[:project][:value]), value_input_option: 'USER_ENTERED')
+    service.update_spreadsheet_value(em_pm_sheet, "#{this_month_sheet}!C#{cell_index}", values(data[:activity][:value]), value_input_option: 'USER_ENTERED')
+    service.update_spreadsheet_value(em_pm_sheet, "#{this_month_sheet}!D#{cell_index}", values("=SUM(E#{cell_index}:AL#{cell_index})"), value_input_option: 'USER_ENTERED')
     requests = []
 
     requests.push({
@@ -299,7 +303,7 @@ class Authorizer
       }
     })
     body = {requests: requests}
-    service.batch_update_spreadsheet(user.sheet_id, body, {})
+    service.batch_update_spreadsheet(em_pm_sheet, body, {})
   end
 
   def create_missing_column(user = @tg_user, workdays, column)

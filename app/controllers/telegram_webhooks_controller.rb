@@ -273,10 +273,10 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
     when 4
       if ["EM","EMF"].include? @message['text'].upcase.chomp
         if @message['text'] == "EM"
-          @user.update(company_id: 1)
+          @user.update(company_id: 1, setup: 0 )
           respond_with :message, text: 'Grazie mille, il setup è completo!'
         else
-          @user.update(company_id: 0)
+          @user.update(company_id: 0, setup: 0 )
           respond_with :message, text: 'Grazie mille, ti contatterò alle 18:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
         end
 
