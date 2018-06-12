@@ -87,11 +87,12 @@ class Authorizer
 
     work_sessions.each do |ws|
       next if ws[1].blank? || ws[2] == 0 || ws[0] =~ /pranzo/i
-      project_row = find_project_cell(project_cells, ws[0], ws[1])
-      service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!#{day_column}#{project_row}", values(ws[2]), value_input_option: 'USER_ENTERED')
-      
       pm_auth = Authorizer.new(giudditta_uid)
       pm_service = pm_auth.service
+      
+      em_project_row = pm_auth.find_project_cell(pm_auth.project_cells, ws[0], ws[1])
+      pm_service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!#{day_column}#{em_project_row}", values(ws[2]), value_input_option: 'USER_ENTERED')
+      
       # byebug
       project_row_pm = pm_auth.find_project_cell_with_name(pm_auth.project_cells_with_name, ws[0], ws[1], user.name)
       pm_service.update_spreadsheet_value(em_pm_sheet, "#{this_month_sheet}!#{day_column}#{project_row_pm}", values(ws[2]), value_input_option: 'USER_ENTERED')
