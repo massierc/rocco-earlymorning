@@ -28,7 +28,7 @@ class WorkSession < ApplicationRecord
   end
 
   def stop_previous_jobs
-    user.work_sessions.where(end_date: nil).find_each do |wa|
+    user.work_sessions.where(end_date: nil).find_each do |ws|
       ws.stop_job
     end
   end
