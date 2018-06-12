@@ -30,6 +30,8 @@ module Rocco
     config.api_only = true
     config.telegram_updates_controller.session_store = :redis_store, {expires_in: 1.month}
     config.active_job.queue_adapter = :sidekiq
+    config.time_zone = 'Rome'
+    config.active_record.default_timezone = :local
   end
 end
 

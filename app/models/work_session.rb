@@ -6,7 +6,7 @@ class WorkSession < ApplicationRecord
   before_create :stop_previous_jobs
 
   I18n.locale = :it
-  
+
   def duration
     (end_date - start_date)
   end
@@ -14,7 +14,7 @@ class WorkSession < ApplicationRecord
   def duration_in_minutes
     duration / 1.minutes
   end
-  
+
   def duration_in_hours
     duration_in_minutes / 60
   end
@@ -35,7 +35,7 @@ class WorkSession < ApplicationRecord
 
   def stop_job
     if self.end_date.nil?
-      self.end_date = DateTime.now
+      self.end_date = DateTime.current
       self.save
       bot = Telegram.bot
 
