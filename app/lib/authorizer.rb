@@ -87,7 +87,7 @@ class Authorizer
 
     work_sessions.each do |ws|
       next if ws[1].blank? || ws[2] == 0 || ws[0] =~ /pranzo/i
-      pm_auth = Authorizer.new(giudditta_uid)
+      pm_auth = Authorizer.new(giuditta_uid)
       pm_service = pm_auth.service
       
       em_project_row = pm_auth.find_project_cell(pm_auth.project_cells, ws[0], ws[1])

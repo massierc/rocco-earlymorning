@@ -182,12 +182,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
     case @user.level
     when 4
-      respond_with :message, text: 'Vuoi fermare il timer o vai a casa?', reply_markup: {
-        keyboard: [['stop']],
-        resize_keyboard: true,
-        one_time_keyboard: true,
-        selective: true,
-      }
+      if @user.active_worksession.nil?
+        @user.update(level: 0)
+        handle_worksession
+      end
+      WorkTimerJob.new.perform(@user.id)
     when 3
       respond_with :message, text: 'A cosa stai lavorando?', reply_markup: {
         keyboard: project_list,

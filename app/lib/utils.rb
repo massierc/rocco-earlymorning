@@ -20,7 +20,7 @@ module Utils
     (month + " " + date.last)
   end
 
-  def giudditta_uid
+  def giuditta_uid
       user = if Rails.env.development?
       "87171529"
     else

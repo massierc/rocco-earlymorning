@@ -3,8 +3,18 @@ class WorkTimerJob < ApplicationJob
   queue_as :default
 
   def perform(user_id)
-    bot = Telegram.bot
     user = User.find(user_id)
+
+    ss = Sidekiq::ScheduledSet.new
+    ss.select do |s|
+      if s.item["args"][0].class == Hash
+        s.item["args"][0]["arguments"].include? (user.id)
+      else
+        s.item["args"][0] == user.id
+      end
+    end.each(&:delete)
+
+    bot = Telegram.bot
     ws = user.active_worksession
 
     if ws
