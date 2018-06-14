@@ -93,7 +93,7 @@ class Authorizer
       em_project_row = pm_auth.find_project_cell_with_name(pm_auth.project_cells_with_name(user.sheet_id), ws[0], ws[1], user.name, false)
       pm_service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!#{day_column}#{em_project_row}", values(ws[2]), value_input_option: 'USER_ENTERED')
       
-      project_row_pm = pm_auth.find_project_cell_with_name(pm_auth.project_cells_with_name(em_pm_sheet), ws[0], ws[1], user.name)
+      project_row_pm = pm_auth.find_project_cell_with_name(pm_auth.project_cells_with_name(em_pm_sheet), ws[0], ws[1], user.name, true)
       pm_service.update_spreadsheet_value(em_pm_sheet, "#{this_month_sheet}!#{day_column}#{project_row_pm}", values(ws[2]), value_input_option: 'USER_ENTERED')
     end
   end
@@ -209,7 +209,7 @@ class Authorizer
     end
   end
 
-  def find_project_cell_with_name(cells, project, activity, name, pm = true)
+  def find_project_cell_with_name(cells, project, activity, name, pm)
     project_exists = cells.any?{|c| c.include? project}
     activity_exists = cells.any?{|c| c.include? activity}
     name_exists = cells.any?{|c| c.include? name}
@@ -245,7 +245,7 @@ class Authorizer
   end
 
 
-  def create_missing_row_with_name(user = @tg_user, data, pm = true)
+  def create_missing_row_with_name(user = @tg_user, data, pm)
     if pm
       sheets = service.get_spreadsheet(em_pm_sheet).sheets
       sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
