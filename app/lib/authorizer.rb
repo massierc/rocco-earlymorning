@@ -90,11 +90,10 @@ class Authorizer
       pm_auth = Authorizer.new(giuditta_uid)
       pm_service = pm_auth.service
       
-      em_project_row = find_project_cell(project_cells, ws[0], ws[1])
+      em_project_row = pm_auth.find_project_cell_with_name(pm_auth.project_cells_with_name(user.sheet_id), ws[0], ws[1], user.name))
       pm_service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!#{day_column}#{em_project_row}", values(ws[2]), value_input_option: 'USER_ENTERED')
       
-      # byebug
-      project_row_pm = pm_auth.find_project_cell_with_name(pm_auth.project_cells_with_name, ws[0], ws[1], user.name)
+      project_row_pm = pm_auth.find_project_cell_with_name(pm_auth.project_cells_with_name(em_pm_sheet), ws[0], ws[1], user.name)
       pm_service.update_spreadsheet_value(em_pm_sheet, "#{this_month_sheet}!#{day_column}#{project_row_pm}", values(ws[2]), value_input_option: 'USER_ENTERED')
     end
   end
@@ -155,7 +154,6 @@ class Authorizer
 
   def project_cells_with_name(sheet_id = @tg_user.sheet_id)
     # byebug
-    sheet_id = em_pm_sheet
     begin
       projects = service.get_spreadsheet_values(sheet_id, "#{this_month_sheet}!A:C").values
     rescue Google::Apis::ClientError
