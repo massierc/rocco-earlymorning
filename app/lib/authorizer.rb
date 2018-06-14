@@ -240,7 +240,14 @@ class Authorizer
         }
       }
       create_missing_row_with_name(@tg_user, data, pm)
-      find_project_cell_with_name(project_cells_with_name, project, activity, name, pm)
+      
+      if pm
+        sheet = em_pm_sheet
+      else
+        sheet = User.find_by_name(data[:name][:value]).sheet_id
+      end
+
+      find_project_cell_with_name(project_cells_with_name(sheet), project, activity, name, pm)
     end
   end
 
