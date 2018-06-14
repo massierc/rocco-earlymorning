@@ -153,6 +153,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     if @ws.nil? && bye==false
       respond_with :message, text: "Nessuna sessione attiva"
     elsif bye
+      @ws.stop_job
       return
     else
       @ws.stop_job
@@ -182,12 +183,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
     case @user.level
     when 4
-      respond_with :message, text: 'Vuoi fermare il timer o vai a casa?', reply_markup: {
-        keyboard: [['stop']],
-        resize_keyboard: true,
-        one_time_keyboard: true,
-        selective: true,
-      }
+      if @user.active_worksession.nil?
+        @user.update(level: 0)
+        handle_worksession
+      end
+      WorkTimerJob.new.perform(@user.id)
     when 3
       respond_with :message, text: 'A cosa stai lavorando?', reply_markup: {
         keyboard: project_list,
@@ -273,10 +273,10 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
     when 4
       if ["EM","EMF"].include? @message['text'].upcase.chomp
         if @message['text'] == "EM"
-          @user.update(company_id: 1)
+          @user.update(company_id: 1, setup: 0 )
           respond_with :message, text: 'Grazie mille, il setup è completo!'
         else
-          @user.update(company_id: 0)
+          @user.update(company_id: 0, setup: 0 )
           respond_with :message, text: 'Grazie mille, ti contatterò alle 18:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
         end
 

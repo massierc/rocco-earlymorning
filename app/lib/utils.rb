@@ -20,6 +20,15 @@ module Utils
     (month + " " + date.last)
   end
 
+  def giuditta_uid
+      user = if Rails.env.development?
+      "87171529"
+    else
+      "555036656"
+    end
+    User.find_by_uid(user).uid
+  end
+  
 
 
   def riccardo_uid
@@ -29,6 +38,10 @@ module Utils
       "riccardocattaneo17"
     end
     User.find_by_username(user).uid
+  end
+
+  def em_pm_sheet
+    "1DO9H3l32jZbTwPnHf-Z_logP6Gbsvw2DMnOvw9EK53w"
   end
 
   def super_sheet

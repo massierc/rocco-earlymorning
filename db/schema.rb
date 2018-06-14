@@ -21,14 +21,14 @@ ActiveRecord::Schema.define(version: 20180523154316) do
     t.string "username"
     t.string "sheet_id"
     t.string "jid"
-    t.integer "setup", default: 2
+    t.integer "setup", default: 3
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "special", default: false
     t.string "note"
     t.string "last_cell"
     t.string "name"
-    t.integer "company_id"
+    t.integer "company_id", default: 0
   end
 
   create_table "work_sessions", force: :cascade do |t|
