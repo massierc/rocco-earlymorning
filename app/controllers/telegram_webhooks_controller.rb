@@ -153,6 +153,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     if @ws.nil? && bye==false
       respond_with :message, text: "Nessuna sessione attiva"
     elsif bye
+      @ws.stop_job
       return
     else
       @ws.stop_job
