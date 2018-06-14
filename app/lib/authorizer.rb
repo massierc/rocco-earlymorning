@@ -90,7 +90,7 @@ class Authorizer
       pm_auth = Authorizer.new(giuditta_uid)
       pm_service = pm_auth.service
       
-      em_project_row = pm_auth.find_project_cell_with_name(pm_auth.project_cells_with_name(user.sheet_id), ws[0], ws[1], user.name)
+      em_project_row = pm_auth.find_project_cell_with_name(pm_auth.project_cells_with_name(user.sheet_id), ws[0], ws[1], user.name, false)
       pm_service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!#{day_column}#{em_project_row}", values(ws[2]), value_input_option: 'USER_ENTERED')
       
       project_row_pm = pm_auth.find_project_cell_with_name(pm_auth.project_cells_with_name(em_pm_sheet), ws[0], ws[1], user.name)
@@ -209,7 +209,7 @@ class Authorizer
     end
   end
 
-  def find_project_cell_with_name(cells, project, activity, name)
+  def find_project_cell_with_name(cells, project, activity, name, pm=true)
     project_exists = cells.any?{|c| c.include? project}
     activity_exists = cells.any?{|c| c.include? activity}
     name_exists = cells.any?{|c| c.include? name}
@@ -239,17 +239,23 @@ class Authorizer
           exists: activity_exists, value: activity
         }
       }
-      create_missing_row_with_name(@tg_user, data)
-      find_project_cell_with_name(project_cells_with_name, project, activity, name)
+      create_missing_row_with_name(@tg_user, data, pm)
+      find_project_cell_with_name(project_cells_with_name, project, activity, name, pm)
     end
   end
 
 
-  def create_missing_row_with_name(user = @tg_user, data)
-    sheets = service.get_spreadsheet(em_pm_sheet).sheets
-    sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
-
-    cell_index = project_cells_with_name.find_index { |arr| arr.include? data[:name][:value] } + 1
+  def create_missing_row_with_name(user = @tg_user, data, pm=true)
+    if pm
+      sheets = service.get_spreadsheet(em_pm_sheet).sheets
+      sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
+      cell_index = project_cells_with_name(em_pm_sheet).find_index { |arr| arr.include? data[:name][:value] } + 1
+    else
+      sheet = User.find_by_name(data[:name][:value]).sheet_id
+      sheets = service.get_spreadsheet(sheet).sheets
+      sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
+      cell_index = project_cells_with_name(sheet).find_index { |arr| arr.include? data[:name][:value] } + 1
+    end
 
     requests = []
     requests.push(
