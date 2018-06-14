@@ -247,15 +247,15 @@ class Authorizer
 
   def create_missing_row_with_name(user = @tg_user, data, pm)
     if pm
-      sheets = service.get_spreadsheet(em_pm_sheet).sheets
-      sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
-      cell_index = project_cells_with_name(em_pm_sheet).find_index { |arr| arr.include? data[:name][:value] } + 1
+      sheet = em_pm_sheet
     else
       sheet = User.find_by_name(data[:name][:value]).sheet_id
-      sheets = service.get_spreadsheet(sheet).sheets
-      sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
-      cell_index = project_cells_with_name(sheet).find_index { |arr| arr.include? data[:name][:value] } + 1
     end
+    
+    sheet = User.find_by_name(data[:name][:value]).sheet_id
+    sheets = service.get_spreadsheet(sheet).sheets
+    sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
+    cell_index = project_cells_with_name(sheet).find_index { |arr| arr.include? data[:name][:value] } + 1
 
     requests = []
     requests.push(
@@ -271,16 +271,16 @@ class Authorizer
 
     body = {requests: requests}
 
-    service.batch_update_spreadsheet(em_pm_sheet, body, {})
+    service.batch_update_spreadsheet(sheet, body, {})
 
     name = data[:name][:value]
 
     cell_index += 1
 
-    service.update_spreadsheet_value(em_pm_sheet, "#{this_month_sheet}!A#{cell_index}", values(name), value_input_option: 'USER_ENTERED')
-    service.update_spreadsheet_value(em_pm_sheet, "#{this_month_sheet}!B#{cell_index}", values(data[:project][:value]), value_input_option: 'USER_ENTERED')
-    service.update_spreadsheet_value(em_pm_sheet, "#{this_month_sheet}!C#{cell_index}", values(data[:activity][:value]), value_input_option: 'USER_ENTERED')
-    service.update_spreadsheet_value(em_pm_sheet, "#{this_month_sheet}!D#{cell_index}", values("=SUM(E#{cell_index}:AL#{cell_index})"), value_input_option: 'USER_ENTERED')
+    service.update_spreadsheet_value(sheet, "#{this_month_sheet}!A#{cell_index}", values(name), value_input_option: 'USER_ENTERED')
+    service.update_spreadsheet_value(sheet, "#{this_month_sheet}!B#{cell_index}", values(data[:project][:value]), value_input_option: 'USER_ENTERED')
+    service.update_spreadsheet_value(sheet, "#{this_month_sheet}!C#{cell_index}", values(data[:activity][:value]), value_input_option: 'USER_ENTERED')
+    service.update_spreadsheet_value(sheet, "#{this_month_sheet}!D#{cell_index}", values("=SUM(E#{cell_index}:AL#{cell_index})"), value_input_option: 'USER_ENTERED')
     requests = []
 
     requests.push({
@@ -308,7 +308,7 @@ class Authorizer
       }
     })
     body = {requests: requests}
-    service.batch_update_spreadsheet(em_pm_sheet, body, {})
+    service.batch_update_spreadsheet(sheet, body, {})
   end
 
   def create_missing_column(user = @tg_user, workdays, column)
