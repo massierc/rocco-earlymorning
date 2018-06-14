@@ -246,7 +246,6 @@ class Authorizer
       else
         sheet = User.find_by_name(data[:name][:value]).sheet_id
       end
-
       find_project_cell_with_name(project_cells_with_name(sheet), project, activity, name, pm)
     end
   end
@@ -259,7 +258,6 @@ class Authorizer
       sheet = User.find_by_name(data[:name][:value]).sheet_id
     end
     
-    sheet = User.find_by_name(data[:name][:value]).sheet_id
     sheets = service.get_spreadsheet(sheet).sheets
     sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
     cell_index = project_cells_with_name(sheet).find_index { |arr| arr.include? data[:name][:value] } + 1
