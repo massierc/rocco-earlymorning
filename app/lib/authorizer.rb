@@ -209,7 +209,7 @@ class Authorizer
     end
   end
 
-  def find_project_cell_with_name(cells, project, activity, name, pm=true)
+  def find_project_cell_with_name(cells, project, activity, name, pm = true)
     project_exists = cells.any?{|c| c.include? project}
     activity_exists = cells.any?{|c| c.include? activity}
     name_exists = cells.any?{|c| c.include? name}
@@ -245,7 +245,7 @@ class Authorizer
   end
 
 
-  def create_missing_row_with_name(user = @tg_user, data, pm=true)
+  def create_missing_row_with_name(user = @tg_user, data, pm = true)
     if pm
       sheets = service.get_spreadsheet(em_pm_sheet).sheets
       sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
