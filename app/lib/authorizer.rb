@@ -90,7 +90,7 @@ class Authorizer
       pm_auth = Authorizer.new(giuditta_uid)
       pm_service = pm_auth.service
       
-      em_project_row = pm_auth.find_project_cell(pm_auth.project_cells, ws[0], ws[1])
+      em_project_row = find_project_cell(project_cells, ws[0], ws[1])
       pm_service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!#{day_column}#{em_project_row}", values(ws[2]), value_input_option: 'USER_ENTERED')
       
       # byebug
@@ -269,7 +269,7 @@ class Authorizer
 
     service.batch_update_spreadsheet(em_pm_sheet, body, {})
 
-    name = user.name
+    name = data[:name][:value]
 
     cell_index += 1
 

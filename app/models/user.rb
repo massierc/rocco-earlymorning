@@ -18,7 +18,7 @@ class User < ApplicationRecord
 
     Authorizer.new(self.uid).update_timesheet_em(self, mapped_sessions)
     bot = Telegram.bot
-    bot.send_message(chat_id: self.uid, text: 'TimeSheet aggiornato!')
+    # bot.send_message(chat_id: self.uid, text: 'TimeSheet aggiornato!')
 
   end
 
