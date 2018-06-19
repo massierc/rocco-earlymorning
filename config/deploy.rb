@@ -8,20 +8,20 @@ set :repo_url, "git@gitlab.com:gildo/rocco.git"
 ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
 
 # Default deploy_to directory is /var/www/my_app_name
-set :deploy_to, '/home/gildo/apps/rocco'
+set :deploy_to, "/home/gildo/apps/rocco"
 # Don't change these unless you know what you're doing
-set :pty,             false
-set :use_sudo,        false
+set :pty, false
+set :use_sudo, false
 set :user, "gildo"
-set :stage,           :production
-set :deploy_via,      :remote_cache
-set :deploy_to,       "/home/#{fetch(:user)}/apps/#{fetch(:application)}"
-set :puma_bind,       "unix://#{shared_path}/tmp/sockets/#{fetch(:application)}-puma.sock"
-set :puma_state,      "#{shared_path}/tmp/pids/puma.state"
-set :puma_pid,        "#{shared_path}/tmp/pids/puma.pid"
+set :stage, :production
+set :deploy_via, :remote_cache
+set :deploy_to, "/home/#{fetch(:user)}/apps/#{fetch(:application)}"
+set :puma_bind, "unix://#{shared_path}/tmp/sockets/#{fetch(:application)}-puma.sock"
+set :puma_state, "#{shared_path}/tmp/pids/puma.state"
+set :puma_pid, "#{shared_path}/tmp/pids/puma.pid"
 set :puma_access_log, "#{release_path}/log/puma.error.log"
-set :puma_error_log,  "#{release_path}/log/puma.access.log"
-set :puma_threads, [0, 8]
+set :puma_error_log, "#{release_path}/log/puma.access.log"
+set :puma_threads, [1, 2]
 set :puma_workers, 1
 set :bundle_jobs, 1
 
@@ -30,7 +30,7 @@ set :puma_preload_app, true
 set :puma_worker_timeout, nil
 set :puma_init_active_record, true  # Change to false when not using ActiveRecord
 set :sidekiq_processes, 1
-set :sidekiq_concurrency, 3
+set :sidekiq_concurrency, 2
 # Default value for :format is :airbrussh.
 # set :format, :airbrussh
 
@@ -59,7 +59,7 @@ set :sidekiq_concurrency, 3
 # Uncomment the following to require manually verifying the host key before first deploy.
 # set :ssh_options, verify_host_key: :secure
 namespace :puma do
-  desc 'Create Directories for Puma Pids and Socket'
+  desc "Create Directories for Puma Pids and Socket"
   task :make_dirs do
     on roles(:app) do
       execute "mkdir #{shared_path}/tmp/sockets -p"
