@@ -21,10 +21,8 @@ class UnbillableJob < ApplicationJob
     bot.send_message(chat_id: User.find_by_username('gildof').uid,
                      text: 'Unbillable lanciato ')
 
-
-
     nwo_service = Authorizer.new(riccardo_uid).service
-    unbillable_sheets = nwo_service.get_spreadsheet_values(super_sheet, "EXPORT!B:C").values
+    unbillable_sheets = nwo_service.get_spreadsheet_values(super_sheet, 'EXPORT!B:C').values
     unbillable_sheets = unbillable_sheets.map do |x|
       x[0] if x[1]&.downcase == 'x' && x[0]&.downcase&.chomp != 'unbillable'
     end.compact
@@ -45,7 +43,7 @@ class UnbillableJob < ApplicationJob
 
     User.find_each do |user|
       # TODO: manage auth fails
-      skip = %w[riccardocattaneo17 Kaiser_Sose]
+      skip = %w[riccardocattaneo17]
       next if skip.include? user.username
 
       current_name = user.name
@@ -63,7 +61,16 @@ class UnbillableJob < ApplicationJob
                 .index { |x| x[0..2] == [day.year.to_s, day.month.to_s, current_name] }
 
         next unless range
-        unbillable_days = 21 - billable_hours
+
+        unbillable_days = case user.username
+                          when 'pasalino'
+                            16 - billable_hours
+                          when 'Kaiser_Sose'
+                            10 - billable_hours
+                          else
+                            21 - billable_hours
+                          end
+
         unbillable_days = unbillable_days.to_s
         nwo_service.update_spreadsheet_value(super_sheet, "Unbillable!O#{range + 1}",
                                              values([[unbillable_days]]),
