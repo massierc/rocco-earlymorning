@@ -1,0 +1,5 @@
+AllCops:
+  Exclude:
+    - 'db/**'
+    - '**/Gemfile'
+  TargetRubyVersion: 2.5

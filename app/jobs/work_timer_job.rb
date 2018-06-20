@@ -5,6 +5,8 @@ class WorkTimerJob < ApplicationJob
   def perform(user_id)
     user = User.find(user_id)
 
+    I18n.locale = :it
+
     ss = Sidekiq::ScheduledSet.new
     ss.select do |s|
       if s.item["args"][0].class == Hash
