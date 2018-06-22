@@ -31,8 +31,6 @@ class UnbillableJob < ApplicationJob
                         .get_spreadsheet_values(super_sheet, 'Unbillable!D:O')
                         .values
 
-    bot.send_message(chat_id: riccardo_uid, text: 'Unbillable End.')
-
     nwo_sheets_values = {}
 
     unbillable_sheets.each do |bs|
