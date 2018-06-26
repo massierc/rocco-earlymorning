@@ -26,8 +26,8 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
         end_worksession(bye = true)
         respond_with :message, text: 'OK, tra poco aggiorno il tuo TimeSheet, buona giornata!'
         @user.delay.update_timesheets
-        next_business_day = next_business_day(DateTime.current)
-        next_business_day = DateTime.new(next_business_day.year, next_business_day.month, next_business_day.mday, 9, 30)
+        next_business_day = next_business_day(Time.zone.now)
+        next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 9, 30)
         job = HelloJob.set(wait_until: next_business_day).perform_later(@user.uid)
       end
     end
