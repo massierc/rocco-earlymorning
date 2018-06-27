@@ -19,3 +19,4 @@
 
 db/rocco_development
 credentials/*
+dump.rdb
