@@ -25,6 +25,8 @@ group :development do
   gem 'capistrano-bundler'
   gem 'capistrano-sidekiq'
   gem 'capistrano3-puma', github: "seuros/capistrano-puma"
+  gem 'rbnacl', '>= 3.2', '< 5.0'
+  gem 'bcrypt_pbkdf', '>= 1.0', '< 2.0'
 end
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
 # gem 'rack-cors'
@@ -44,8 +46,6 @@ gem 'google-api-client'
 gem 'sidekiq'
 gem 'sentry-raven'
 gem 'rails-i18n'
-gem 'rbnacl', '>= 3.2', '< 5.0'
-gem 'bcrypt_pbkdf', '>= 1.0', '< 2.0'
 
 group :development, :test do
   gem 'rspec-rails'
