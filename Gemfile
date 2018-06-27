@@ -44,6 +44,7 @@ gem 'google-api-client'
 gem 'sidekiq'
 gem 'sentry-raven'
 gem 'rails-i18n'
+gem 'rbnacl', '>= 3.2', '< 5.0'
 
 group :development, :test do
   gem 'rspec-rails'
