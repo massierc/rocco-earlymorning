@@ -45,6 +45,7 @@ gem 'sidekiq'
 gem 'sentry-raven'
 gem 'rails-i18n'
 gem 'rbnacl', '>= 3.2', '< 5.0'
+gem 'bcrypt_pbkdf', '>= 1.0', '< 2.0'
 
 group :development, :test do
   gem 'rspec-rails'

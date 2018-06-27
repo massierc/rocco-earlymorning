@@ -53,6 +53,7 @@ GEM
       sshkit (>= 1.6.1, != 1.7.0)
     arel (8.0.0)
     awesome_print (1.8.0)
+    bcrypt_pbkdf (1.0.0)
     builder (3.2.3)
     byebug (10.0.2)
     capistrano (3.10.2)
@@ -263,6 +264,7 @@ PLATFORMS
 
 DEPENDENCIES
   awesome_print
+  bcrypt_pbkdf (>= 1.0, < 2.0)
   byebug
   capistrano
   capistrano-bundler
