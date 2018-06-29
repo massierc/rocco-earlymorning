@@ -277,12 +277,12 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
           respond_with :message, text: 'Grazie mille, il setup è completo!'
         else
           @user.update(company_id: 0, setup: 0)
-          respond_with :message, text: 'Grazie mille, ti contatterò alle 18:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
+          respond_with :message, text: 'Grazie mille, ti contatterò alle 19:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
         end
 
         if @user.company_id == 0
           next_business_day = next_business_day(DateTime.current)
-          next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 18, 00)
+          next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 19, 00)
           job = AskJob.set(wait_until: next_business_day).perform_later(@user.uid)
           @user.update(jid: job.job_id, level: 3)
         else

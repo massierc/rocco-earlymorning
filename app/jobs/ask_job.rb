@@ -27,7 +27,7 @@ class AskJob < ApplicationJob
     })
 
     next_business_day = next_business_day(DateTime.current)
-    next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 18, 00)
+    next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 19, 00)
     job = AskJob.set(wait_until: next_business_day).perform_later(uid)
     user.update(jid: job.job_id, level: 3)
 
