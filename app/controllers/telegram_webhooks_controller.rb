@@ -51,7 +51,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       if args.length === 0
         RiccardoJob.perform_later
         respond_with :message, text: "Ciao #{user}, job NWO avviato con successo per il mese in corso 👍"
-      elsif is_month? args[0]
+      elsif is_month?(args[0])
           month = args[0].strip.downcase.capitalize
           RiccardoJob.perform_later(month)
           respond_with :message, text: "Ciao #{user}, job NWO avviato con successo per #{args[0]} #{Date.today.year.to_s} 👍"
