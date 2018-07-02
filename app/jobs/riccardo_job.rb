@@ -22,7 +22,7 @@ class RiccardoJob < ApplicationJob
           service = Authorizer.new(riccardo_uid).service
         end
 
-        if _args.length > 0 && is_month? _args[0]
+        if _args.length > 0 && is_month?(_args[0])
           month = _args[0].strip.downcase.capitalize
           year = Date.today.strftime("%Y")
           month_sheet = "#{month} #{year}"
