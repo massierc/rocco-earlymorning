@@ -260,7 +260,7 @@ class Authorizer
     
     sheets = service.get_spreadsheet(sheet).sheets
     sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
-    cell_index = project_cells_with_name(sheet).find_index { |arr| arr.include? data[:name][:value] } + 1
+    cell_index = project_cells_with_name(sheet).find_index { |arr| arr.include? data[:name][:value] } + 2
 
     requests = []
     requests.push(
@@ -375,6 +375,7 @@ class Authorizer
 
     cell_index += 1
 
+    # TODO: 
     service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!A#{cell_index}", values(name), value_input_option: 'USER_ENTERED')
     service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!B#{cell_index}", values(data[:project][:value]), value_input_option: 'USER_ENTERED')
     service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!C#{cell_index}", values(data[:activity][:value]), value_input_option: 'USER_ENTERED')

@@ -1,5 +1,17 @@
 module Utils
+  MONTHS = %w(Gennaio Febbraio Marzo Aprile Maggio Giugno Luglio Agosto Settembre Ottobre Novembre Dicembre)
+
+  def is_month?(month)
+    MONTHS.include? month.strip.downcase.capitalize
+  end
+  
   def this_month_sheet
+    date = Date.today.strftime("%B %Y").split
+    month = month_in_italian(date[0].to_sym)
+    (month + " " + date.last)
+  end
+
+  def month_in_italian(month)
     convert = {
       "January": "Gennaio",
       "February": "Febbraio",
@@ -14,10 +26,7 @@ module Utils
       "November": "Novembre",
       "December": "Dicembre"
     }
-
-    date = Date.today.strftime("%B %Y").split
-    month = convert[(date[0].to_sym)]
-    (month + " " + date.last)
+    month = convert[month]
   end
 
   def giuditta_uid
@@ -28,8 +37,6 @@ module Utils
     end
     User.find_by_uid(user).uid
   end
-  
-
 
   def riccardo_uid
     user = if Rails.env.development?

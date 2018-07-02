@@ -1,6 +1,7 @@
 class TelegramWebhooksController < Telegram::Bot::UpdatesController
   include Telegram::Bot::UpdatesController::MessageContext
   include BusinessDate
+  include Utils
   context_to_action!
 
   before_action :set_user
@@ -43,13 +44,22 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     end
   end
 
-  def nwo
-    admins = %w[gildof riccardocattaneo17]
-    if admins.include? @message['from']['username']
-      RiccardoJob.perform_later
-      respond_with :message, text: "Ciao #{@message['from']['username']}, job NWO avviato con successo 💩"
+  def nwo(*args)
+    admins = %w[gildof riccardocattaneo17 massierc]
+    user = @message['from']['username']
+    if admins.include? user
+      if args.length === 0
+        RiccardoJob.perform_later
+        respond_with :message, text: "Ciao #{user}, job NWO avviato con successo per il mese in corso 👍"
+      elsif is_month? args[0]
+          month = args[0].strip.downcase.capitalize
+          RiccardoJob.perform_later(month)
+          respond_with :message, text: "Ciao #{user}, job NWO avviato con successo per #{args[0]} #{Date.today.year.to_s} 👍"
+      else
+        respond_with :message, text: "#{user}, #{args.join(' ')} non mi sembra un mese, ritenta!"
+      end
     else
-      respond_with :message, text: "#{@message['from']['username']} /nwo è un comando riservato, non sei admin."
+      respond_with :message, text: "#{user} /nwo è un comando riservato, non sei admin."
       respond_with :message, text: "L'incidente verrà riportato."
       sleep(5)
       respond_with :message, text: '..scherzooo!'
