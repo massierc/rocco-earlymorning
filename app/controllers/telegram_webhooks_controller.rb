@@ -43,10 +43,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     end
   end
 
-  def nwo
+  def nwo(params = {})
     admins = %w[gildof riccardocattaneo17]
+    month = params if params.length == 1
     if admins.include? @message['from']['username']
-      RiccardoJob.perform_later
+      RiccardoJob.perform_later(month)
       respond_with :message, text: "Ciao #{@message['from']['username']}, job NWO avviato con successo 💩"
     else
       respond_with :message, text: "#{@message['from']['username']} /nwo è un comando riservato, non sei admin."
