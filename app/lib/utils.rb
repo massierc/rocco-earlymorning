@@ -1,11 +1,13 @@
 module Utils
-  def this_month_sheet
-    
-  end
+  MONTHS = %w(Gennaio Febbraio Marzo Aprile Maggio Giugno Luglio Agosto Settembre Ottobre Novembre Dicembre)
 
-  def get_sheet(month = nil)
+  def is_month?(month)
+    MONTHS.include? month.strip.downcase.capitalize
+  end
+  
+  def this_month_sheet
     date = Date.today.strftime("%B %Y").split
-    month ? month = month_in_italian(month.capitalize.to_sym) : month = month_in_italian(date[0].to_sym)
+    month = month_in_italian(date[0].to_sym)
     (month + " " + date.last)
   end
 

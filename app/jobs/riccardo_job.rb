@@ -21,8 +21,15 @@ class RiccardoJob < ApplicationJob
         if service == 0
           service = Authorizer.new(riccardo_uid).service
         end
-        month = _args[0]
-        month_sheet = get_sheet(month)
+
+        if _args.length > 0 && is_month? _args[0]
+          month = _args[0].strip.downcase.capitalize
+          year = Date.today.strftime("%Y")
+          month_sheet = "#{month} #{year}"
+        else
+          month_sheet = this_month_sheet
+        end
+
         projects = service.get_spreadsheet_values(user.sheet_id, "#{month_sheet}!A:D").values
         cells = Hash[sheets.map {|x| [x, 0]}]
         # TODO: Rescuing here does not work
