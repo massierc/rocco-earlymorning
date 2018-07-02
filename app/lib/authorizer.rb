@@ -260,7 +260,7 @@ class Authorizer
     
     sheets = service.get_spreadsheet(sheet).sheets
     sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
-    cell_index = project_cells_with_name(sheet).find_index { |arr| arr.include? data[:name][:value] } + 1
+    cell_index = project_cells_with_name(sheet).find_index { |arr| arr.include? data[:name][:value] } + 2
 
     requests = []
     requests.push(
