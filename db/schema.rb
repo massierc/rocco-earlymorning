@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180703111051) do
+ActiveRecord::Schema.define(version: 20180703161907) do
 
   create_table "users", force: :cascade do |t|
     t.integer "uid"
@@ -36,6 +36,7 @@ ActiveRecord::Schema.define(version: 20180703111051) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "aasm_state"
+    t.date "date"
     t.index ["user_id"], name: "index_work_days_on_user_id"
   end
 

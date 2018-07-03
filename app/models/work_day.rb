@@ -1,7 +1,10 @@
 class WorkDay < ApplicationRecord
   include AASM
+
   belongs_to :user
   has_many :work_sessions
+
+  validates :date, uniqueness: true
 
   aasm do
     state :waiting_for_morning, initial: true

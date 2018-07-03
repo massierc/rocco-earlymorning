@@ -6,9 +6,8 @@ class HelloJob < ApplicationJob
   def perform(uid)
     user = User.find_by_uid(uid)
     bot = Telegram.bot
-    work_day = WorkDay.new
-    work_day.user = user
-    work_day.good_morning!
+    work_day = WorkDay.new(user: user, date: Date.today)
+    work_day.save ? work_day.good_morning! : work_day = WorkDay.find_by_date(Date.current)
     bot.send_message(chat_id: uid, text: "Buongiorno! Da dove lavori oggi?", reply_markup: {
       inline_keyboard: [
         [
