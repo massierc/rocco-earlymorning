@@ -10,25 +10,33 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180523154316) do
+ActiveRecord::Schema.define(version: 20180703111051) do
 
   create_table "users", force: :cascade do |t|
     t.integer "uid"
     t.integer "level", default: 0
     t.string "what"
     t.string "howmuch"
-    t.string "who"
     t.string "username"
     t.string "sheet_id"
     t.string "jid"
-    t.integer "setup", default: 3
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.integer "setup", default: 2
+    t.string "who"
     t.boolean "special", default: false
     t.string "note"
     t.string "last_cell"
     t.string "name"
+    t.datetime "created_at"
+    t.datetime "updated_at"
     t.integer "company_id", default: 0
+  end
+
+  create_table "work_days", force: :cascade do |t|
+    t.integer "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "aasm_state"
+    t.index ["user_id"], name: "index_work_days_on_user_id"
   end
 
   create_table "work_sessions", force: :cascade do |t|
@@ -39,7 +47,9 @@ ActiveRecord::Schema.define(version: 20180523154316) do
     t.string "activity"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "work_day_id"
     t.index ["user_id"], name: "index_work_sessions_on_user_id"
+    t.index ["work_day_id"], name: "index_work_sessions_on_work_day_id"
   end
 
 end

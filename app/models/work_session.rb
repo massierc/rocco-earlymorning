@@ -1,6 +1,7 @@
 class WorkSession < ApplicationRecord
   include ActionView::Helpers::DateHelper
   belongs_to :user
+  belongs_to :work_day
 
   after_create :start_job
   before_create :stop_previous_jobs

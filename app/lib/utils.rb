@@ -29,6 +29,14 @@ module Utils
     month = convert[month]
   end
 
+  def cb_data(current_state, value)
+    cb_obj = {
+      state: current_state,
+      value: value
+    }
+    cb_obj.to_json
+  end
+
   def giuditta_uid
       user = if Rails.env.development?
       "87171529"
