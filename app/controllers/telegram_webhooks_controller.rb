@@ -41,6 +41,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   def waiting_for_activity(activity)
     work_day = @user.work_days.last
+    work_day.get_activity!
     session = @user.work_sessions.create(start_date: DateTime.current, work_day: work_day, activity: activity)
     project_list = Authorizer.new(@user.uid).list_projects(Authorizer.new(@user.uid).project_cells)
     keyboard = []
@@ -54,6 +55,20 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       message_id: @message_id, 
       reply_markup: { inline_keyboard: keyboard }
     })
+  end
+
+  def waiting_for_client(client)
+    work_day = @user.work_days.last
+    work_day.get_client!
+    session = @user.active_worksession
+    session.update(client: client)
+    Telegram.bot.edit_message_text({
+      text: "Scrivimi quando finisci, mi farò comunque vivo tra mezz'ora per assicurarmi che non ti scordi di me 😃", 
+      chat_id: @user.uid, 
+      message_id: @message_id, 
+      reply_markup: { inline_keyboard: [] }
+    })
+    answer_callback_query 'Timer avviato ⏲️'
   end
 
   def premimimi
