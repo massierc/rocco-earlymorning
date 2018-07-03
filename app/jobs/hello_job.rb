@@ -6,17 +6,17 @@ class HelloJob < ApplicationJob
   def perform(uid)
     user = User.find_by_uid(uid)
     bot = Telegram.bot
-    session = WorkDay.new
-    session.user = user
-    session.good_morning!
+    work_day = WorkDay.new
+    work_day.user = user
+    work_day.good_morning!
     bot.send_message(chat_id: uid, text: "Buongiorno! Da dove lavori oggi?", reply_markup: {
       inline_keyboard: [
         [
-          {text: 'Ufficio', callback_data: cb_data(session.aasm_state, 'ufficio')}
+          {text: 'Ufficio', callback_data: cb_data(work_day.aasm_state, 'ufficio')}
         ],
         [
-          {text: 'Remoto', callback_data: cb_data(session.aasm_state, 'remoto')},
-          {text: 'Cliente', callback_data: cb_data(session.aasm_state, 'cliente')}
+          {text: 'Remoto', callback_data: cb_data(work_day.aasm_state, 'remoto')},
+          {text: 'Cliente', callback_data: cb_data(work_day.aasm_state, 'cliente')}
         ]
       ]
     })

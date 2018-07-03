@@ -14,26 +14,46 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def callback_query(data)
-    def manage_timer(data)
-      case data
-      when 'yes'
-        respond_with :message, text: 'Buon lavoro ;) '
-      when 'no'
-        end_worksession
-      when 'lunch'
-        end_worksession(lunch = true)
-        create_lunch
-      when 'bye'
-        end_worksession(bye = true)
-        respond_with :message, text: 'OK, tra poco aggiorno il tuo TimeSheet, buona giornata!'
-        @user.delay.update_timesheets
-        next_business_day = next_business_day(DateTime.current)
-        next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 9, 30)
-        job = HelloJob.set(wait_until: next_business_day).perform_later(@user.uid)
-      end
-    end
-    manage_timer(data)
-    answer_callback_query 'OK'
+    @message_id = payload['message']['message_id']
+    data = JSON.parse(data)
+    self.public_send(data['state'], data['value'])
+    # def manage_timer(data)
+    #   case data
+    #   when 'yes'
+    #     respond_with :message, text: 'Buon lavoro ;) '
+    #   when 'no'
+    #     end_worksession
+    #   when 'lunch'
+    #     end_worksession(lunch = true)
+    #     create_lunch
+    #   when 'bye'
+    #     end_worksession(bye = true)
+    #     respond_with :message, text: 'OK, tra poco aggiorno il tuo TimeSheet, buona giornata!'
+    #     @user.delay.update_timesheets
+    #     next_business_day = next_business_day(DateTime.current)
+    #     next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 9, 30)
+    #     job = HelloJob.set(wait_until: next_business_day).perform_later(@user.uid)
+    #   end
+    # end
+    # manage_timer(data)
+    # answer_callback_query 'OK'
+  end
+
+  def waiting_for_activity(activity)
+    work_day = @user.work_days.last
+    session = @user.work_sessions.create(start_date: DateTime.current, work_day: work_day, activity: activity)
+    project_list = Authorizer.new(@user.uid).list_projects(Authorizer.new(@user.uid).project_cells)
+    keyboard = []
+    project_list.each do |p|
+      keyboard_row = p.map { |proj| { text: proj, callback_data: cb_data(work_day.aasm_state, proj) } }  
+      keyboard << keyboard_row
+    end 
+    Telegram.bot.edit_message_text({
+      text: 'A cosa stai lavorando?', 
+      chat_id: @user.uid, 
+      message_id: @message_id, 
+      reply_markup: { inline_keyboard: keyboard }
+    })
   end
 
   def premimimi
