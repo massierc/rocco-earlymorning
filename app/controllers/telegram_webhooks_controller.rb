@@ -7,6 +7,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   before_action :set_user
 
   def set_user
+    @bot = Telegram.bot
     @message = ActiveSupport::HashWithIndifferentAccess.new(payload)
     @user = User.find_or_initialize_by(uid: @message['from']['id'], username: @message['from']['username'])
     @user.setup = 3 unless @user.persisted?
@@ -17,9 +18,9 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     @work_day = @user.work_days.find_by_date(Date.current)
     @message_id = payload['message']['message_id']
     data = JSON.parse(data)
+    manage_worksession(data)
     sh = StateHandler.new(user: @user, message_id: @message_id, work_day: @work_day)
-    update_worksession(data['value'])
-    sh.public_send(data['state'])
+    sh.public_send(data['state']) unless still_working?(data) || workday_finished?(data)
     # def manage_timer(data)
     #   case data
     #   when 'yes'
@@ -42,12 +43,46 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     # answer_callback_query 'OK'
   end
 
-  def update_worksession(value)
-    if @user.active_worksession.nil?
-      @user.work_sessions.create(start_date: DateTime.current, work_day: @work_day, activity: value)
+  def manage_worksession(data)
+    if session_finished?(data)
+      end_worksession
+    elsif still_working?(data)
+      @bot.delete_message(chat_id: @user.uid, message_id: @message_id)
+      @bot.send_message(
+        chat_id: @user.uid,
+        text: 'Ok, a dopo!'
+      )
     else
-      @user.active_worksession.update(client: value)
+      update_worksession(data)
     end
+  end
+
+  def update_worksession(data)
+    if data['state'] == 'waiting_for_activity'
+      @user.work_sessions.create(start_date: DateTime.current, work_day: @work_day, activity: data['value'])
+      respond_with :message, text: "▶️ lavori da: #{data['value']}"
+    elsif data['state'] == 'waiting_for_client'
+      @user.active_worksession.update(client: data['value'])
+      respond_with :message, text: "▶️ stai lavorando su: #{data['value']}"
+    else
+      return
+    end
+  end
+
+  def end_worksession
+    @user.active_worksession.stop_job
+  end
+
+  def session_finished?(data)
+    data['state'] == 'waiting_for_end_of_session' && data['value'] == 'finished'
+  end
+
+  def still_working?(data)
+    data['state'] == 'waiting_for_end_of_session' && data['value'] == 'still_working'
+  end
+
+  def workday_finished?(data)
+    data['state'] == 'waiting_for_user_input' && data['value'] == 'good_night'
   end
 
   def premimimi
@@ -172,21 +207,21 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   private
 
-  def end_worksession(bye = false)
-    @ws = @user.active_worksession
-    if @ws.nil? && bye == false
-      respond_with :message, text: 'Nessuna sessione attiva'
-    elsif bye
-      @ws.stop_job if @ws
-      return
-    else
-      @ws.stop_job
-      unless bye
-        @message['text'] = 'Hellooooooooo!'
-        handle_worksession
-      end
-    end
-  end
+  # def end_worksession(bye = false)
+  #   @ws = @user.active_worksession
+  #   if @ws.nil? && bye == false
+  #     respond_with :message, text: 'Nessuna sessione attiva'
+  #   elsif bye
+  #     @ws.stop_job if @ws
+  #     return
+  #   else
+  #     @ws.stop_job
+  #     unless bye
+  #       @message['text'] = 'Hellooooooooo!'
+  #       handle_worksession
+  #     end
+  #   end
+  # end
 
   def create_lunch
     @user.work_sessions.create(start_date: DateTime.current, client: 'Pranzo', activity: '')

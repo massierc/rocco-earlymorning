@@ -40,7 +40,7 @@ class WorkSession < ApplicationRecord
       self.save
       bot = Telegram.bot
 
-      text = "Sessione #{self.client} - #{self.activity} delle #{self.start_date.strftime("%H:%M")} chiusa dopo #{self.duration_in_words}"
+      text = "▶️ sessione #{self.client} - #{self.activity} delle #{self.start_date.strftime("%H:%M")} chiusa dopo #{self.duration_in_words}"
 
       bot.send_message(chat_id: user.uid, text: text)
       user.update(level: 0)

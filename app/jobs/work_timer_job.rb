@@ -2,6 +2,7 @@
 
 class WorkTimerJob < ApplicationJob
   include BusinessDate
+  include Utils
   queue_as :default
 
   def perform(user_id)
@@ -20,18 +21,18 @@ class WorkTimerJob < ApplicationJob
 
     bot = Telegram.bot
     ws = user.active_worksession
+    work_day = ws.work_day
 
     if ws
-      timer_text = if ws.client == 'Pranzo'
-                     'Sei ancora a pranzo?'
-                   else
-                     "Stai ancora lavorando a #{ws.client}-#{ws.activity} ?"
-                   end
+      timer_text = ask_for_updates(ws)
 
       timer_options = [
-        { text: 'Sì', callback_data: 'yes' },
-        { text: 'No', callback_data: 'no' },
-        { text: 'Bye', callback_data: 'bye' }
+        [
+          {text: 'Sto ancora lavorando', callback_data: cb_data(work_day.aasm_state, 'still_working')}
+        ],
+        [
+          {text: 'No, ho finito', callback_data: cb_data(work_day.aasm_state, 'finished')}
+        ]
       ]
 
       start_lunch = Time.current.change(hour: 12, min: 25)
@@ -40,22 +41,40 @@ class WorkTimerJob < ApplicationJob
       puts Time.current
       if Time.current.between?(start_lunch, end_lunch) && !ws.lunch?
         timer_text += ' o sei a PRANZO?'
-        timer_options.unshift(text: 'PRANZO', callback_data: 'lunch')
+        timer_options.push([{text: 'Sono a pranzo! 🍝', callback_data: 'lunch'}])
       end
 
-      bot.send_message(chat_id: user.uid, text: timer_text, reply_markup: {
-                         inline_keyboard: [
-                           timer_options
-                         ],
-                         resize_keyboard: true,
-                         one_time_keyboard: true,
-                         selective: true
-                       })
+      bot.send_message(
+        chat_id: user.uid,
+        text: timer_text,
+        reply_markup: {
+          inline_keyboard: timer_options,
+          resize_keyboard: true,
+          one_time_keyboard: true,
+          selective: true
+        }
+      )
 
       job = WorkTimerJob.set(wait: 30.minutes).perform_later(user.id)
-      # user.update(jid: job.job_id, level: 3)
     else
-      puts 'no WS active'
+      puts 'no active WS'
     end
+  end
+
+  def ask_for_updates(ws)
+    if ws.client == 'Pranzo'
+      text = 'Sei ancora a pranzo?'
+    else
+      text = "Stai ancora lavorando per #{ws.client} "
+      case ws.activity
+      when 'ufficio'
+        text += 'in ufficio?'
+      when 'cliente'
+        text += 'dal cliente?'
+      when 'remoto'
+        text += 'da remoto?'
+      end
+    end
+    text
   end
 end
