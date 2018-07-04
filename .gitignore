@@ -20,3 +20,5 @@
 db/rocco_development
 credentials/*
 dump.rdb
+# Ignore application configuration
+/config/application.yml

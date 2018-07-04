@@ -47,6 +47,7 @@ gem 'sidekiq'
 gem 'sentry-raven'
 gem 'rails-i18n'
 gem 'aasm', '~> 4.12', '>= 4.12.3'
+gem 'figaro'
 
 group :development, :test do
   gem 'rspec-rails'
