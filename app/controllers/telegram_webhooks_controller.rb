@@ -14,9 +14,12 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def callback_query(data)
+    @work_day = @user.work_days.find_by_date(Date.current)
     @message_id = payload['message']['message_id']
     data = JSON.parse(data)
-    self.public_send(data['state'], data['value'])
+    sh = StateHandler.new(user: @user, message_id: @message_id, work_day: @work_day)
+    update_worksession(data['value'])
+    sh.public_send(data['state'])
     # def manage_timer(data)
     #   case data
     #   when 'yes'
@@ -39,36 +42,12 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     # answer_callback_query 'OK'
   end
 
-  def waiting_for_activity(activity)
-    work_day = @user.work_days.last
-    work_day.get_activity!
-    session = @user.work_sessions.create(start_date: DateTime.current, work_day: work_day, activity: activity)
-    project_list = Authorizer.new(@user.uid).list_projects(Authorizer.new(@user.uid).project_cells)
-    keyboard = []
-    project_list.each do |p|
-      keyboard_row = p.map { |proj| { text: proj, callback_data: cb_data(work_day.aasm_state, proj) } }  
-      keyboard << keyboard_row
-    end 
-    Telegram.bot.edit_message_text({
-      text: 'A cosa stai lavorando?', 
-      chat_id: @user.uid, 
-      message_id: @message_id, 
-      reply_markup: { inline_keyboard: keyboard }
-    })
-  end
-
-  def waiting_for_client(client)
-    work_day = @user.work_days.last
-    work_day.get_client!
-    session = @user.active_worksession
-    session.update(client: client)
-    Telegram.bot.edit_message_text({
-      text: "Scrivimi quando finisci, mi farò comunque vivo tra mezz'ora per assicurarmi che non ti scordi di me 😃", 
-      chat_id: @user.uid, 
-      message_id: @message_id, 
-      reply_markup: { inline_keyboard: [] }
-    })
-    answer_callback_query 'Timer avviato ⏲️'
+  def update_worksession(value)
+    if @user.active_worksession.nil?
+      @user.work_sessions.create(start_date: DateTime.current, work_day: @work_day, activity: value)
+    else
+      @user.active_worksession.update(client: value)
+    end
   end
 
   def premimimi
