@@ -32,8 +32,7 @@ class WorkTimerJob < ApplicationJob
       ]
 
       start_lunch = Time.current.change(hour: 12, min: 25)
-      end_lunch = Time.current.change(hour: 21, min: 15)
-      # end_lunch = Time.current.change(hour: 14, min: 15) TODOOOOOOOOOO <---------------------------------------------------------------------------
+      end_lunch = Time.current.change(hour: 14, min: 15)
 
       puts Time.current
       if Time.current.between?(start_lunch, end_lunch) && !ws.lunch?
