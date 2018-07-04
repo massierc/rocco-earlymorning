@@ -225,51 +225,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     close_kb_and_send_msg(msg)
   end
 
-  def handle_worksession
-    # TODO: If active worksession don't do nothing
-    if @message['text'] =~ /stop/i
-      end_worksession
-      return
-    end
-
-    user_service = Authorizer.new(@message[:from][:id])
-    user_projects = user_service.project_cells
-    project_list  = user_service.list_projects(user_projects)
-
-    case @user.level
-    when 4
-      if @user.active_worksession.nil?
-        @user.update(level: 0)
-        handle_worksession
-      end
-      WorkTimerJob.new.perform(@user.id)
-    when 3
-      respond_with :message, text: 'A cosa stai lavorando?', reply_markup: {
-        keyboard: project_list,
-        resize_keyboard: true,
-        one_time_keyboard: true,
-        selective: true
-      }
-      @user.update(level: 2, what: @message['text'])
-
-    when 0
-      @user.update(level: 3)
-
-      respond_with :message, text: 'Da dove lavori oggi?', reply_markup: {
-        keyboard: [%w[Remoto Ufficio Cliente]],
-        resize_keyboard: true,
-        one_time_keyboard: true,
-        selective: true
-      }
-    when 2
-      @user.update(level: 4, who: @message['text'])
-      # Authorizer.new(@message[:from][:id]).update_timesheet(@user)
-      @user.work_sessions.create(start_date: DateTime.current, client: @user.who, activity: @user.what)
-      m = 'Timer avviato, buon lavoro!'
-      respond_with :message, text: m
-    end
-  end
-
   def handle_timesheet
     user_service = Authorizer.new(@message[:from][:id])
     user_projects = user_service.project_cells
