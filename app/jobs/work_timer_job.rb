@@ -27,12 +27,8 @@ class WorkTimerJob < ApplicationJob
       timer_text = ask_for_updates(ws)
 
       timer_options = [
-        [
-          {text: 'Sto ancora lavorando 🤓', callback_data: cb_data(work_day.aasm_state, 'still_working')}
-        ],
-        [
-          {text: 'No, ho finito 👍', callback_data: cb_data(work_day.aasm_state, 'finished')}
-        ]
+        [{text: 'Sto ancora lavorando 🤓', callback_data: cb_data(work_day.aasm_state, 'still_working')}],
+        [{text: 'No, ho finito 👍', callback_data: cb_data(work_day.aasm_state, 'finished')}]
       ]
 
       start_lunch = Time.current.change(hour: 12, min: 25)
@@ -44,6 +40,13 @@ class WorkTimerJob < ApplicationJob
         timer_text.chomp!('?')
         timer_text += ' o sei a pranzo?'
         timer_options.push([{text: 'Sono a pranzo! 🍝', callback_data: cb_data(work_day.aasm_state, 'lunch')}])
+      elsif ws.lunch?
+        timer_options = [
+          [
+            {text: 'Sì', callback_data: cb_data(work_day.aasm_state, 'still_working')},
+            {text: 'No, ho finito 👍', callback_data: cb_data(work_day.aasm_state, 'finished')}
+          ]
+        ]
       end
 
       bot.send_message(
