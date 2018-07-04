@@ -21,26 +21,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     manage_worksession(data)
     sh = StateHandler.new(user: @user, message_id: @message_id, work_day: @work_day)
     sh.public_send(data['state']) unless still_working?(data) || workday_finished?(data)
-    # def manage_timer(data)
-    #   case data
-    #   when 'yes'
-    #     respond_with :message, text: 'Buon lavoro ;) '
-    #   when 'no'
-    #     end_worksession
-    #   when 'lunch'
-    #     end_worksession(lunch = true)
-    #     create_lunch
-    #   when 'bye'
-    #     end_worksession(bye = true)
-    #     respond_with :message, text: 'OK, tra poco aggiorno il tuo TimeSheet, buona giornata!'
-    #     @user.delay.update_timesheets
-    #     next_business_day = next_business_day(DateTime.current)
-    #     next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 9, 30)
-    #     job = HelloJob.set(wait_until: next_business_day).perform_later(@user.uid)
-    #   end
-    # end
-    # manage_timer(data)
-    # answer_callback_query 'OK'
   end
 
   def manage_worksession(data)
@@ -56,8 +36,12 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       @bot.delete_message(chat_id: @user.uid, message_id: @message_id)
       @bot.send_message(
         chat_id: @user.uid,
-        text: 'Ok, sto aggiornando il tuo timesheet. Buona serata 🍻'
+        text: 'Ok, tra poco aggiorno il tuo timesheet. Buona serata 🍻'
       )
+      @user.delay.update_timesheets
+      next_business_day = next_business_day(DateTime.current)
+      next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 9, 30)
+      HelloJob.set(wait_until: next_business_day).perform_later(@user.uid)
     else
       update_worksession(data)
     end
