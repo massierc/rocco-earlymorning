@@ -33,7 +33,7 @@ class StateHandler
       keyboard_row = p.map { |proj| { text: proj, callback_data: cb_data(@work_day.aasm_state, proj) } }  
       keyboard << keyboard_row
     end 
-    @bot.delete_message(chat_id: @user.uid, message_id: @message_id)
+    @bot.delete_message(chat_id: @user.uid, message_id: @message_id) if @message_id
     @bot.send_message(
       chat_id: @user.uid, 
       text: 'A cosa stai lavorando?', 
@@ -43,7 +43,7 @@ class StateHandler
 
   def waiting_for_client
     @work_day.get_client!
-    @bot.delete_message(chat_id: @user.uid, message_id: @message_id)
+    @bot.delete_message(chat_id: @user.uid, message_id: @message_id) if @message_id
     @bot.send_message(
       chat_id: @user.uid, 
       text: "Scrivimi quando finisci, mi farò comunque vivo tra mezz'ora per assicurarmi che non ti scordi di me 😃"
@@ -53,7 +53,7 @@ class StateHandler
 
   def waiting_for_end_of_session
     @work_day.end_session!
-    @bot.delete_message(chat_id: @user.uid, message_id: @message_id)
+    @bot.delete_message(chat_id: @user.uid, message_id: @message_id) if @message_id
     @bot.send_message(
       chat_id: @user.uid, 
       text: "Ok, vuoi aggiungere una nuova attività?", 
@@ -69,7 +69,7 @@ class StateHandler
   end
 
   def waiting_for_user_input
-    @bot.delete_message(chat_id: @user.uid, message_id: @message_id)
+    @bot.delete_message(chat_id: @user.uid, message_id: @message_id) if @message_id
     waiting_for_morning
   end
 end

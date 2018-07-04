@@ -36,13 +36,14 @@ class WorkTimerJob < ApplicationJob
       ]
 
       start_lunch = Time.current.change(hour: 12, min: 25)
-      end_lunch = Time.current.change(hour: 14, min: 15)
+      end_lunch = Time.current.change(hour: 21, min: 15)
+      # end_lunch = Time.current.change(hour: 14, min: 15) TODOOOOOOOOOO <---------------------------------------------------------------------------
 
       puts Time.current
       if Time.current.between?(start_lunch, end_lunch) && !ws.lunch?
         timer_text.chomp!('?')
         timer_text += ' o sei a pranzo?'
-        timer_options.push([{text: 'Sono a pranzo! 🍝', callback_data: 'lunch'}])
+        timer_options.push([{text: 'Sono a pranzo! 🍝', callback_data: cb_data(work_day.aasm_state, 'lunch')}])
       end
 
       bot.send_message(

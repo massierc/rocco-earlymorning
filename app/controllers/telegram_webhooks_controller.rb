@@ -12,6 +12,38 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     @user = User.find_or_initialize_by(uid: @message['from']['id'], username: @message['from']['username'])
     @user.setup = 3 unless @user.persisted?
     @user.save
+    @work_day = @user.work_days.find_by_date(Date.current)
+  end
+
+  def message(_message)
+    if @user.setup > 0
+      if @user.setup == 3
+        start
+      else
+        handle_setup
+      end
+    else
+      if @user.company_id == 0
+        handle_timesheet
+      else
+        handle_message(_message['text'])
+      end
+    end
+  end
+
+  def handle_message(msg)
+    if msg_in_scope?(msg)
+      @work_day = WorkDay.create(user: @user, date: Date.today) unless @work_day
+      respond_with :message, text: 'Ciao 👋' if msg.match(/ciaoo*/i) 
+      sh = StateHandler.new(user: @user, work_day: @work_day)
+      sh.public_send(@work_day.aasm_state)
+    else
+      respond_with :message, text: "Scusa, non capisco cosa intendi con #{msg} 🤔"
+    end
+  end
+
+  def msg_in_scope?(msg)
+    msg.match(/ciaoo*/i) || msg.match(/finito/i) || msg.match(/finish/i) || msg.match(/fatto/i) || msg.match(/done/i)
   end
 
   def callback_query(data)
@@ -158,25 +190,9 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     end
   end
 
-  def message(_message)
-    if @user.setup > 0
-      if @user.setup == 3
-        start
-      else
-        handle_setup
-      end
-    else
-      if @user.company_id == 0
-        handle_timesheet
-      else
-        handle_worksession
-      end
-    end
-  end
-
   def start(*)
-    respond_with :message, text: "Ciao #{@message[:from][:first_name]} :)"
-    respond_with :message, text: 'prima di cominciare ho bisogno che mi autorizzi a modificare il tuo TimeSheet, per favore clicca su questo link'
+    respond_with :message, text: "Ciao #{@message[:from][:first_name]} 😃"
+    respond_with :message, text: 'Prima di cominciare ho bisogno che mi autorizzi a modificare il tuo TimeSheet, per favore clicca su questo link'
     respond_with :message, text: 'ed in seguito digita il codice di autorizzazione'
     @url = Authorizer.new(@message[:from][:id]).get_url
     respond_with :message, text: @url
@@ -196,22 +212,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   private
-
-  # def end_worksession(bye = false)
-  #   @ws = @user.active_worksession
-  #   if @ws.nil? && bye == false
-  #     respond_with :message, text: 'Nessuna sessione attiva'
-  #   elsif bye
-  #     @ws.stop_job if @ws
-  #     return
-  #   else
-  #     @ws.stop_job
-  #     unless bye
-  #       @message['text'] = 'Hellooooooooo!'
-  #       handle_worksession
-  #     end
-  #   end
-  # end
 
   def create_lunch
     @user.work_sessions.create(start_date: DateTime.current, client: 'Pranzo', activity: '')
