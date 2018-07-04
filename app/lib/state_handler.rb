@@ -16,7 +16,9 @@ class StateHandler
           {text: 'Ufficio', callback_data: cb_data(@work_day.aasm_state, 'ufficio')}
         ],
         [
-          {text: 'Remoto', callback_data: cb_data(@work_day.aasm_state, 'remoto')},
+          {text: 'Remoto', callback_data: cb_data(@work_day.aasm_state, 'remoto')}
+        ],
+        [
           {text: 'Cliente', callback_data: cb_data(@work_day.aasm_state, 'cliente')}
         ]
       ]
@@ -67,6 +69,7 @@ class StateHandler
   end
 
   def waiting_for_user_input
+    @bot.delete_message(chat_id: @user.uid, message_id: @message_id)
     waiting_for_morning
   end
 end

@@ -28,10 +28,10 @@ class WorkTimerJob < ApplicationJob
 
       timer_options = [
         [
-          {text: 'Sto ancora lavorando', callback_data: cb_data(work_day.aasm_state, 'still_working')}
+          {text: 'Sto ancora lavorando 🤓', callback_data: cb_data(work_day.aasm_state, 'still_working')}
         ],
         [
-          {text: 'No, ho finito', callback_data: cb_data(work_day.aasm_state, 'finished')}
+          {text: 'No, ho finito 👍', callback_data: cb_data(work_day.aasm_state, 'finished')}
         ]
       ]
 
@@ -40,7 +40,8 @@ class WorkTimerJob < ApplicationJob
 
       puts Time.current
       if Time.current.between?(start_lunch, end_lunch) && !ws.lunch?
-        timer_text += ' o sei a PRANZO?'
+        timer_text.chomp!('?')
+        timer_text += ' o sei a pranzo?'
         timer_options.push([{text: 'Sono a pranzo! 🍝', callback_data: 'lunch'}])
       end
 

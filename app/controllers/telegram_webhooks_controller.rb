@@ -52,6 +52,12 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
         chat_id: @user.uid,
         text: 'Ok, a dopo!'
       )
+    elsif workday_finished?(data)
+      @bot.delete_message(chat_id: @user.uid, message_id: @message_id)
+      @bot.send_message(
+        chat_id: @user.uid,
+        text: 'Ok, sto aggiornando il tuo timesheet. Buona serata 🍻'
+      )
     else
       update_worksession(data)
     end
