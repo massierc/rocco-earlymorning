@@ -7,34 +7,22 @@ class WorkTimerJob < ApplicationJob
 
   def perform(user_id)
     user = User.find(user_id)
-
+    binding.pry
+    user.destroy_scheduled_jobs('WorkTimerJob')
     I18n.locale = :it
-
-    ss = Sidekiq::ScheduledSet.new
-    ss.select do |s|
-      if s.item['args'][0].class == Hash
-        s.item['args'][0]['arguments'].include? user.id
-      else
-        s.item['args'][0] == user.id
-      end
-    end.each(&:delete)
-
     bot = Telegram.bot
     ws = user.active_worksession
-    work_day = ws.work_day
 
     if ws
+      work_day = ws.work_day
       timer_text = ask_for_updates(ws)
-
       timer_options = [
         [{text: 'Sto ancora lavorando 🤓', callback_data: cb_data(work_day.aasm_state, 'still_working')}],
         [{text: 'No, ho finito 👍', callback_data: cb_data(work_day.aasm_state, 'finished')}]
       ]
-
       start_lunch = Time.current.change(hour: 12, min: 25)
       end_lunch = Time.current.change(hour: 14, min: 15)
 
-      puts Time.current
       if Time.current.between?(start_lunch, end_lunch) && !ws.lunch?
         timer_text.chomp!('?')
         timer_text += ' o sei a pranzo?'
@@ -59,7 +47,7 @@ class WorkTimerJob < ApplicationJob
         }
       )
 
-      job = WorkTimerJob.set(wait: 30.minutes).perform_later(user.id)
+      WorkTimerJob.set(wait: 30.minutes).perform_later(user.id)
     else
       puts 'no active WS'
     end

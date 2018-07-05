@@ -5,6 +5,7 @@ class HelloJob < ApplicationJob
 
   def perform(uid)
     user = User.find_by_uid(uid)
+    user.destroy_scheduled_jobs('HelloJob')
     bot = Telegram.bot
     work_day = WorkDay.find_by_date(Date.current)
     unless work_day

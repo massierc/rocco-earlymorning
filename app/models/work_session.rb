@@ -1,10 +1,11 @@
 class WorkSession < ApplicationRecord
   include ActionView::Helpers::DateHelper
+  include Utils
   belongs_to :user
   belongs_to :work_day
 
   after_create :start_job
-  before_create :stop_previous_jobs
+  before_create :close_active_sessions
 
   I18n.locale = :it
 
@@ -28,42 +29,40 @@ class WorkSession < ApplicationRecord
     self.client == "Pranzo"
   end
 
-  def stop_previous_jobs
-    user.work_sessions.where(end_date: nil).find_each do |ws|
-      ws.stop_job
-    end
+  def close_active_sessions
+    self.user.close_active_sessions
   end
 
-  def stop_job
+  def close
     if self.end_date.nil?
-      self.end_date = DateTime.current
-      self.save
-      bot = Telegram.bot
-
-      text = "▶️ sessione #{self.client} - #{self.activity} delle #{self.start_date.strftime("%H:%M")} chiusa dopo #{self.duration_in_words}"
-
-      bot.send_message(chat_id: user.uid, text: text)
-      user.update(level: 0)
-    else
-      text = "La sessione #{self.client} - #{self.activity} delle #{self.start_date.strftime("%H:%M")} era già stata chiusa alle #{self.end_date.strftime("%H:%M")}"
-      bot.send_message(chat_id: user.uid, text: text)
+      self.update(end_date: DateTime.current)
+      self.send_confirmation_message
     end
   end
-
+  
   def start_job
-    ss = Sidekiq::ScheduledSet.new
-    ss.select do |s|
-      if s.item["args"][0].class == Hash
-        s.item["args"][0]["arguments"].include? (self.user.id)
-      else
-        s.item["args"][0] == self.user.id
-      end
-    end.each(&:delete)
-
+    user = self.user
     if lunch?
       WorkTimerJob.set(wait: 60.minutes).perform_later(user.id)
     else
       WorkTimerJob.set(wait: 30.minutes).perform_later(user.id)
     end
+  end
+  
+  def send_confirmation_message
+    bot = Telegram.bot
+    self.client.nil? ? client = '' : client = " per #{self.client}"
+    case self.activity
+    when 'ufficio'
+      activity = ' in ufficio'
+    when 'cliente'
+      activity = ' dal cliente'
+    when 'remoto'
+      activity = ' da remoto'
+    when nil
+      activity = ''
+    end
+    text = "▶️ la sessione#{activity + client} delle #{self.start_date.strftime("%H:%M")} è stata chiusa dopo #{self.duration_in_words}"
+    bot.send_message(chat_id: user.uid, text: text)
   end
 end

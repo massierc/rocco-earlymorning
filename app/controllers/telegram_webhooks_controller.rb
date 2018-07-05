@@ -94,7 +94,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def end_worksession
-    @user.active_worksession.stop_job
+    @user.close_active_sessions
   end
 
   def session_finished?(data)
