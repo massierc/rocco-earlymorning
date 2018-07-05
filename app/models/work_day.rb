@@ -1,5 +1,8 @@
 class WorkDay < ApplicationRecord
   include AASM
+  include Utils
+
+  I18n.locale = :it
 
   belongs_to :user
   has_many :work_sessions, dependent: :destroy
@@ -32,5 +35,41 @@ class WorkDay < ApplicationRecord
     event :good_night do
       transitions from: :waiting_for_user_input, to: :waiting_for_morning
     end
+  end
+
+  def send_evening_recap
+    return unless self.work_sessions.length > 0
+    line_length = 28
+    first_name = self.user.name.split.map(&:capitalize)[0]
+    date = I18n.localize(self.date, format: "%d %b %Y").rjust(line_length - first_name.length)
+    opening_tag = "<pre>"
+    closing_tag = "</pre>"
+    new_line = "\n"
+    header = first_name + date + new_line
+    rows = ""
+    total = 0
+    self.work_sessions.each_with_index do |ws, i|
+      total += ws.duration
+      index = "#{i + 1}) "
+      rows += index + "Attività:  " + ws.activity.rjust(14) + new_line
+      rows += "   Cliente:   " + ws.client.rjust(14) + new_line
+      rows += "   Durata:    " + duration_in_hours_and_minutes(ws.duration).rjust(14) + new_line
+      rows += new_line unless i == work_sessions.length - 1
+    end
+    line = "_" * line_length
+    total = "TOTALE #{duration_in_hours_and_minutes(total).rjust(21)}"
+    message = opening_tag \
+            + header \
+            + line \
+            + new_line \
+            + new_line \
+            + rows \
+            + line \
+            + new_line \
+            + total \
+            + new_line \
+            + closing_tag
+    Telegram.bot.send_message(chat_id: self.user.uid, text: "Ecco il tuo recap giornaliero 👇")
+    Telegram.bot.send_message(chat_id: self.user.uid, text: "#{message}", parse_mode: :HTML)    
   end
 end

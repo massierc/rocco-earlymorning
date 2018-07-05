@@ -37,6 +37,10 @@ module Utils
     cb_obj.to_json
   end
 
+  def duration_in_hours_and_minutes(duration)
+    Time.at(duration).utc.strftime("%H:%M")
+  end
+
   def giuditta_uid
       user = if Rails.env.development?
       "87171529"

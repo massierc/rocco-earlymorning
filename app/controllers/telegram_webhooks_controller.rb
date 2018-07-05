@@ -75,7 +75,8 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       create_lunch
     elsif workday_finished?(data)
       @user.close_active_sessions
-      msg = 'Ok, tra poco aggiorno il tuo timesheet. Buona serata 🍻'
+      @work_day.send_evening_recap
+      msg = 'Tra poco aggiorno il tuo timesheet. Buona serata 🍻'
       next_business_day = next_business_day(DateTime.current)
       next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 9, 30)
       close_kb_and_send_msg(msg)
