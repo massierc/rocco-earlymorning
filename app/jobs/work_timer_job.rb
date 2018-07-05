@@ -7,8 +7,6 @@ class WorkTimerJob < ApplicationJob
 
   def perform(user_id)
     user = User.find(user_id)
-    binding.pry
-    user.destroy_scheduled_jobs('WorkTimerJob')
     I18n.locale = :it
     bot = Telegram.bot
     ws = user.active_worksession
@@ -47,7 +45,7 @@ class WorkTimerJob < ApplicationJob
         }
       )
 
-      WorkTimerJob.set(wait: 30.minutes).perform_later(user.id)
+      user.destroy_scheduled_jobs('WorkTimerJob').set(wait: 30.minutes).perform_later(user.id)
     else
       puts 'no active WS'
     end

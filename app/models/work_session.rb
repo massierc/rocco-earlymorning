@@ -42,10 +42,11 @@ class WorkSession < ApplicationRecord
   
   def start_job
     user = self.user
+    job = user.destroy_scheduled_jobs('WorkTimerJob')
     if lunch?
-      WorkTimerJob.set(wait: 60.minutes).perform_later(user.id)
+      job.set(wait: 60.minutes).perform_later(user.id)
     else
-      WorkTimerJob.set(wait: 30.minutes).perform_later(user.id)
+      job.set(wait: 30.minutes).perform_later(user.id)
     end
   end
   

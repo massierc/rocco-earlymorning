@@ -48,7 +48,7 @@ class StateHandler
       chat_id: @user.uid, 
       text: "Scrivimi quando finisci, mi farò comunque vivo tra mezz'ora per assicurarmi che non ti scordi di me 😃"
     )
-    WorkTimerJob.set(wait: 30.minutes).perform_later(@user.id)
+    @user.destroy_scheduled_jobs('WorkTimerJob').set(wait: 30.minutes).perform_later(@user.id)
   end
 
   def waiting_for_end_of_session

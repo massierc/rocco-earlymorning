@@ -37,6 +37,7 @@ class User < ApplicationRecord
       end
       condition && job == job_name
     end.each(&:delete)
+    job = Object.const_get job_name
   end
 
   def close_active_sessions
