@@ -17,7 +17,7 @@ class AskJob < ApplicationJob
     user = User.find_by_uid(uid)
     user_service = Authorizer.new(user.uid)
     user_projects = user_service.project_cells
-    project_list  = user_service.list_projects(user_projects)
+    project_list  = user_service.list_projects(user_projects) << ['stop']
     user.update(level: 3)
     bot.send_message(chat_id: uid, text: 'A cosa hai lavorato oggi?', reply_markup: {
       keyboard: project_list,

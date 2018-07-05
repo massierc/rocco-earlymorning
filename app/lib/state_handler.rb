@@ -12,15 +12,9 @@ class StateHandler
     @work_day.good_morning!
     @bot.send_message(chat_id: @user.uid, text: "Da dove lavori oggi?", reply_markup: {
       inline_keyboard: [
-        [
-          {text: 'Ufficio', callback_data: cb_data(@work_day.aasm_state, 'ufficio')}
-        ],
-        [
-          {text: 'Remoto', callback_data: cb_data(@work_day.aasm_state, 'remoto')}
-        ],
-        [
-          {text: 'Cliente', callback_data: cb_data(@work_day.aasm_state, 'cliente')}
-        ]
+        [{text: 'Ufficio', callback_data: cb_data(@work_day.aasm_state, 'ufficio')}],
+        [{text: 'Remoto', callback_data: cb_data(@work_day.aasm_state, 'remoto')}],
+        [{text: 'Cliente', callback_data: cb_data(@work_day.aasm_state, 'cliente')}]
       ]
     })
   end
@@ -32,8 +26,9 @@ class StateHandler
     project_list.each do |p|
       keyboard_row = p.map { |proj| { text: proj, callback_data: cb_data(@work_day.aasm_state, proj) } }  
       keyboard << keyboard_row
-    end 
-    @bot.delete_message(chat_id: @user.uid, message_id: @message_id) if @message_id
+    end
+    btn_add_new_proj = [{ text: '🆕', callback_data: cb_data(@work_day.aasm_state, 'new_proj') }]
+    keyboard << btn_add_new_proj
     @bot.send_message(
       chat_id: @user.uid, 
       text: 'A cosa stai lavorando?', 
@@ -43,7 +38,6 @@ class StateHandler
 
   def waiting_for_client
     @work_day.get_client!
-    @bot.delete_message(chat_id: @user.uid, message_id: @message_id) if @message_id
     @bot.send_message(
       chat_id: @user.uid, 
       text: "Scrivimi quando finisci, mi farò comunque vivo tra mezz'ora per assicurarmi che non ti scordi di me 😃"

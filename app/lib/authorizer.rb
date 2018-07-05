@@ -166,7 +166,6 @@ class Authorizer
   def list_projects(cells)
     begin
       cells = cells.map{|x| x[0]}[0..-2].compact.uniq
-      cells << "stop"
       cells = cells.each_slice(4).to_a
     rescue
       return ["stop"]
