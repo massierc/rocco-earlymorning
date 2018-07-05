@@ -54,10 +54,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     end
   end
 
-  def msg_in_scope?(msg)
-    msg.match(/finito/i) || msg.match(/finish/i) || msg.match(/fatto/i) || msg.match(/done/i)
-  end
-
   def callback_query(data)
     data = JSON.parse(data)
     return if data['state'] != @work_day.aasm_state
