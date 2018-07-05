@@ -3,7 +3,6 @@ class StateHandler
 
   def initialize(params = {})
     @user = params[:user]
-    @message_id = params[:message_id]
     @work_day = params[:work_day]
     @bot = Telegram.bot
   end
@@ -27,7 +26,7 @@ class StateHandler
       keyboard_row = p.map { |proj| { text: proj, callback_data: cb_data(@work_day.aasm_state, proj) } }  
       keyboard << keyboard_row
     end
-    btn_add_new_proj = [{ text: '🆕', callback_data: cb_data(@work_day.aasm_state, 'new_proj') }]
+    btn_add_new_proj = [{ text: '+ aggiungi', callback_data: cb_data(@work_day.aasm_state, 'new_proj') }]
     keyboard << btn_add_new_proj
     @bot.send_message(
       chat_id: @user.uid, 
@@ -47,7 +46,6 @@ class StateHandler
 
   def waiting_for_end_of_session
     @work_day.end_session!
-    @bot.delete_message(chat_id: @user.uid, message_id: @message_id) if @message_id
     @bot.send_message(
       chat_id: @user.uid, 
       text: "Ok, vuoi aggiungere una nuova attività?", 
@@ -63,7 +61,6 @@ class StateHandler
   end
 
   def waiting_for_user_input
-    @bot.delete_message(chat_id: @user.uid, message_id: @message_id) if @message_id
     waiting_for_morning
   end
 end
