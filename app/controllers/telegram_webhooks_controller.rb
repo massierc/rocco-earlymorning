@@ -16,6 +16,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def message(_message)
+    msg = {
+      user: @user,
+      context: @work_day.aasm_state,
+      message: _message
+    }
     if @user.setup > 0
       if @user.setup == 3
         start
@@ -26,19 +31,28 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       if @user.company_id == 0
         handle_timesheet
       else
-        handle_message(_message)
+        handle_message(msg)
       end
     end
   end
 
   def handle_message(msg)
-    if msg_in_scope?(msg['text'])
-      @work_day = WorkDay.create(user: @user, date: Date.today) unless @work_day
-      respond_with :message, text: 'Ciao 👋' if msg['text'].match(/ciaoo*/i) 
+    case msg[:context]
+    when 'waiting_for_client'
+      client = msg[:message]['text']
+      @user.active_worksession.update(client: client)
+      respond_with :message, text: "▶️ aggiunto #{client} alla tua lista di clienti"
       sh = StateHandler.new(user: @user, work_day: @work_day)
       sh.public_send(@work_day.aasm_state)
     else
-      respond_with :message, text: "Scusa, non capisco cosa intendi con #{msg['text']} 🤔"
+      if msg_in_scope?(msg[:message]['text'])
+        @work_day = WorkDay.create(user: @user, date: Date.today) unless @work_day
+        respond_with :message, text: 'Ciao 👋' if msg[:message]['text'].match(/ciaoo*/i) 
+        sh = StateHandler.new(user: @user, work_day: @work_day)
+        sh.public_send(@work_day.aasm_state)
+      else
+        respond_with :message, text: "Scusa, non capisco cosa intendi con #{msg[:message]['text']} 🤔"
+      end
     end
   end
 
@@ -65,12 +79,13 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       @user.close_active_sessions
       create_lunch
     elsif workday_finished?(data)
+      @user.close_active_sessions
       msg = 'Ok, tra poco aggiorno il tuo timesheet. Buona serata 🍻'
       close_kb_and_send_msg(msg)
       @user.delay.update_timesheets
       next_business_day = next_business_day(DateTime.current)
       next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 9, 30)
-      user.destroy_scheduled_jobs('HelloJob').set(wait_until: next_business_day).perform_later(@user.uid)
+      @user.destroy_scheduled_jobs('HelloJob').set(wait_until: next_business_day).perform_later(@user.uid)
     elsif new_project?(data)
       @bot.delete_message(chat_id: @user.uid, message_id: @message_id)
       @bot.send_message(chat_id: @user.uid, text: 'Su cosa lavori?')
