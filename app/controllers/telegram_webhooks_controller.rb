@@ -79,10 +79,10 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     elsif workday_finished?(data)
       @user.close_active_sessions
       msg = 'Ok, tra poco aggiorno il tuo timesheet. Buona serata 🍻'
-      close_kb_and_send_msg(msg)
-      @user.delay.update_timesheets
       next_business_day = next_business_day(DateTime.current)
       next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 9, 30)
+      close_kb_and_send_msg(msg)
+      @user.destroy_scheduled_jobs('UpdateTimesheetsJob').perform_later(@user.id)
       @user.destroy_scheduled_jobs('HelloJob').set(wait_until: next_business_day).perform_later(@user.uid)
     elsif new_project?(data)
       @bot.delete_message(chat_id: @user.uid, message_id: @message_id)
