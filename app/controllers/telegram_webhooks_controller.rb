@@ -17,7 +17,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   def message(_message)
     unless @work_day
-      @work_day = WorkDay.create(user: user, date: Date.today)
+      @work_day = WorkDay.create(user: @user, date: Date.today)
     end
     msg = {
       user: @user,
