@@ -11,9 +11,9 @@ class StateHandler
     @work_day.good_morning!
     @bot.send_message(chat_id: @user.uid, text: "Da dove lavori oggi?", reply_markup: {
       inline_keyboard: [
-        [{text: 'Ufficio', callback_data: cb_data(@work_day.aasm_state, 'ufficio')}],
-        [{text: 'Remoto', callback_data: cb_data(@work_day.aasm_state, 'remoto')}],
-        [{text: 'Cliente', callback_data: cb_data(@work_day.aasm_state, 'cliente')}]
+        [{text: 'Ufficio', callback_data: cb_data(@work_day.aasm_state, 'Ufficio')}],
+        [{text: 'Remoto', callback_data: cb_data(@work_day.aasm_state, 'Remoto')}],
+        [{text: 'Cliente', callback_data: cb_data(@work_day.aasm_state, 'Cliente')}]
       ]
     })
   end
@@ -48,7 +48,7 @@ class StateHandler
     @work_day.end_session!
     @bot.send_message(
       chat_id: @user.uid, 
-      text: "Ok, vuoi aggiungere una nuova attività?", 
+      text: "Vuoi aggiungere una nuova attività?", 
       reply_markup: { 
         inline_keyboard: [
           [

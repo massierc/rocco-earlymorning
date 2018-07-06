@@ -36,6 +36,12 @@ class WorkSession < ApplicationRecord
   def close
     if self.end_date.nil?
       self.update(end_date: DateTime.current)
+    end
+  end
+
+  def close_and_send_confirmation
+    if self.end_date.nil?
+      self.close
       self.send_confirmation_message
     end
   end
@@ -54,11 +60,11 @@ class WorkSession < ApplicationRecord
     bot = Telegram.bot
     self.client.nil? ? client = '' : client = " per #{self.client}"
     case self.activity
-    when 'ufficio'
+    when 'Ufficio'
       activity = ' in ufficio'
-    when 'cliente'
+    when 'Cliente'
       activity = ' dal cliente'
-    when 'remoto'
+    when 'Remoto'
       activity = ' da remoto'
     when nil
       activity = ''

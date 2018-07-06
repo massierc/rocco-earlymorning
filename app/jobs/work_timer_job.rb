@@ -47,7 +47,10 @@ class WorkTimerJob < ApplicationJob
 
       user.destroy_scheduled_jobs('WorkTimerJob').set(wait: 30.minutes).perform_later(user.id)
     else
-      puts 'no active WS'
+      work_day = user.find_or_create_workday
+      sh = StateHandler.new(user: user, work_day: work_day)
+      bot.send_message(chat_id: user.uid, text: 'Non trovo attività aperte')
+      sh.public_send(work_day.aasm_state)
     end
   end
 
@@ -57,11 +60,11 @@ class WorkTimerJob < ApplicationJob
     else
       text = "Stai ancora lavorando per #{ws.client} "
       case ws.activity
-      when 'ufficio'
+      when 'Ufficio'
         text += 'in ufficio?'
-      when 'cliente'
+      when 'Cliente'
         text += 'dal cliente?'
-      when 'remoto'
+      when 'Remoto'
         text += 'da remoto?'
       end
     end

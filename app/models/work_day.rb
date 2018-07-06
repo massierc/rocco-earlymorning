@@ -7,7 +7,7 @@ class WorkDay < ApplicationRecord
   belongs_to :user
   has_many :work_sessions, dependent: :destroy
 
-  validates :date, uniqueness: true
+  validates :date, uniqueness: { scope: :user }
 
   aasm do
     state :waiting_for_morning, initial: true
