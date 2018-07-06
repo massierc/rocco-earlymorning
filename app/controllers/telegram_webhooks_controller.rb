@@ -16,6 +16,9 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def message(_message)
+    unless @work_day
+      @work_day = WorkDay.create(user: user, date: Date.today)
+    end
     msg = {
       user: @user,
       context: @work_day.aasm_state,
@@ -39,7 +42,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   def handle_message(msg)
     case msg[:context]
     when 'waiting_for_morning'
-      respond_with :message, text: 'Ciao 👋' if msg[:message]['text'].match(/ciaoo*/i) 
+      respond_with :message, text: 'Ciao 👋'
       handle_state(@work_day.aasm_state)
     when 'waiting_for_client'
       client = msg[:message]['text']
