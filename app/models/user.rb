@@ -31,7 +31,7 @@ class User < ApplicationRecord
   def find_or_create_workday
     work_day = self.work_days.find_by_date(Date.current)
     unless work_day
-      work_day = WorkDay.create(user: self, date: Date.today)
+      work_day = self.work_days.create(date: Date.today)
     end
     work_day
   end
