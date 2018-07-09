@@ -25,7 +25,7 @@ class User < ApplicationRecord
 
   def close_active_sessions
     active_sessions = self.work_sessions.where(end_date: nil)
-    active_sessions.each { |session| session.close_and_send_confirmation }
+    active_sessions.each { |session| session.close_and_send_confirmation } unless active_sessions.empty?
   end
 
   def find_or_create_workday
