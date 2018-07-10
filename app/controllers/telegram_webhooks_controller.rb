@@ -56,11 +56,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def callback_query(data)
-    msg_id = payload['message']['message_id']
-    @bot.delete_message(chat_id: @user.uid, message_id: msg_id)
     data = JSON.parse(data)
     return if data['state'] != @work_day.aasm_state
-    @work_day = @user.work_days.find_by_date(Date.current)
+    msg_id = payload['message']['message_id']
+    @bot.delete_message(chat_id: @user.uid, message_id: msg_id)
+    @work_day = @user.find_or_create_workday
     manage_worksession(data)
     handle_state(data['state']) unless still_working?(data) || lunch?(data) || workday_finished?(data) || new_project?(data)
   end
