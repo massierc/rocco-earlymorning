@@ -13,15 +13,21 @@ class WorkDay < ApplicationRecord
     state :waiting_for_morning, initial: true
     state :waiting_for_activity,
           :waiting_for_client,
+          :waiting_for_new_client,
           :waiting_for_end_of_session,
-          :waiting_for_user_input
+          :waiting_for_user_input,
+          :workday_finished
           
     event :wait_for_activity do
-      transitions from: [:waiting_for_morning, :waiting_for_user_input], to: :waiting_for_activity
+      transitions from: [:waiting_for_morning, :waiting_for_user_input, :waiting_for_client], to: :waiting_for_activity
     end
 
     event :wait_for_client do
-      transitions from: :waiting_for_activity, to: :waiting_for_client
+      transitions from: [:waiting_for_activity, :waiting_for_new_client], to: :waiting_for_client
+    end
+
+    event :wait_for_new_client do
+      transitions from: :waiting_for_client, to: :waiting_for_new_client
     end
 
     event :wait_for_end_of_session do
@@ -32,8 +38,8 @@ class WorkDay < ApplicationRecord
       transitions from: :waiting_for_end_of_session, to: :waiting_for_user_input
     end
 
-    event :wait_for_morning do
-      transitions from: :waiting_for_user_input, to: :waiting_for_morning
+    event :end do
+      transitions from: :waiting_for_user_input, to: :workday_finished
     end
   end
 
