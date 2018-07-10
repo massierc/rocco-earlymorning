@@ -55,7 +55,7 @@ class WorkDay < ApplicationRecord
     rows = ""
     total = 0
     self.work_sessions.each_with_index do |ws, i|
-      next if client.nil?
+      next if ws.client.nil?
       total += ws.duration
       index = "#{i + 1}) "
       rows += index + "Attività:  " + ws.activity.rjust(14) + new_line
