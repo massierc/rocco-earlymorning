@@ -16,15 +16,15 @@ class WorkDay < ApplicationRecord
           :waiting_for_end_of_session,
           :waiting_for_user_input
           
-    event :good_morning do
+    event :wait_for_activity do
       transitions from: [:waiting_for_morning, :waiting_for_user_input], to: :waiting_for_activity
     end
 
-    event :get_activity do
+    event :wait_for_client do
       transitions from: :waiting_for_activity, to: :waiting_for_client
     end
 
-    event :get_client do
+    event :wait_for_end_of_session do
       transitions from: :waiting_for_client, to: :waiting_for_end_of_session
     end
 
@@ -32,7 +32,7 @@ class WorkDay < ApplicationRecord
       transitions from: :waiting_for_end_of_session, to: :waiting_for_user_input
     end
 
-    event :good_night do
+    event :wait_for_morning do
       transitions from: :waiting_for_user_input, to: :waiting_for_morning
     end
   end
