@@ -13,18 +13,24 @@ class WorkDay < ApplicationRecord
     state :waiting_for_morning, initial: true
     state :waiting_for_activity,
           :waiting_for_client,
+          :waiting_for_new_client,
           :waiting_for_end_of_session,
-          :waiting_for_user_input
+          :waiting_for_user_input,
+          :workday_finished
           
-    event :good_morning do
-      transitions from: [:waiting_for_morning, :waiting_for_user_input], to: :waiting_for_activity
+    event :wait_for_activity do
+      transitions from: [:waiting_for_morning, :waiting_for_user_input, :waiting_for_client], to: :waiting_for_activity
     end
 
-    event :get_activity do
-      transitions from: :waiting_for_activity, to: :waiting_for_client
+    event :wait_for_client do
+      transitions from: [:waiting_for_activity, :waiting_for_new_client], to: :waiting_for_client
     end
 
-    event :get_client do
+    event :wait_for_new_client do
+      transitions from: :waiting_for_client, to: :waiting_for_new_client
+    end
+
+    event :wait_for_end_of_session do
       transitions from: :waiting_for_client, to: :waiting_for_end_of_session
     end
 
@@ -32,8 +38,8 @@ class WorkDay < ApplicationRecord
       transitions from: :waiting_for_end_of_session, to: :waiting_for_user_input
     end
 
-    event :good_night do
-      transitions from: :waiting_for_user_input, to: :waiting_for_morning
+    event :end do
+      transitions from: :waiting_for_user_input, to: :workday_finished
     end
   end
 
@@ -49,6 +55,7 @@ class WorkDay < ApplicationRecord
     rows = ""
     total = 0
     self.work_sessions.each_with_index do |ws, i|
+      next if client.nil?
       total += ws.duration
       index = "#{i + 1}) "
       rows += index + "Attività:  " + ws.activity.rjust(14) + new_line

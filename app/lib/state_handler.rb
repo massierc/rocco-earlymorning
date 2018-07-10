@@ -8,7 +8,7 @@ class StateHandler
   end
 
   def waiting_for_morning
-    @work_day.good_morning!
+    @work_day.wait_for_activity!
     @bot.send_message(chat_id: @user.uid, text: "Da dove lavori oggi?", reply_markup: {
       inline_keyboard: [
         [{text: 'Ufficio', callback_data: cb_data(@work_day.aasm_state, 'Ufficio')}],
@@ -19,7 +19,7 @@ class StateHandler
   end
   
   def waiting_for_activity
-    @work_day.get_activity!
+    @work_day.wait_for_client!
     project_list = Authorizer.new(@user.uid).list_projects(Authorizer.new(@user.uid).project_cells)
     keyboard = []
     project_list.each do |p|
@@ -36,7 +36,7 @@ class StateHandler
   end
 
   def waiting_for_client
-    @work_day.get_client!
+    @work_day.wait_for_end_of_session!
     @bot.send_message(
       chat_id: @user.uid, 
       text: "Scrivimi quando finisci, mi farò comunque vivo tra mezz'ora per assicurarmi che non ti scordi di me 😃"
