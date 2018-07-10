@@ -71,7 +71,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
         @work_day.wait_for_activity!
       end
     end
-    handle_state(data['state']) unless still_working?(data) || lunch?(data) || workday_finished?(data) || new_project?(data)
+    handle_state(@work_day.aasm_state) unless still_working?(data) || lunch?(data) || workday_finished?(data) || new_project?(data)
   end
 
   def manage_worksession(data)
