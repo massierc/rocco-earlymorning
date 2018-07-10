@@ -39,11 +39,10 @@ class WorkSession < ApplicationRecord
     end
   end
 
-  def close_and_send_confirmation
-    if self.end_date.nil?
-      self.close
-      self.send_confirmation_message
-    end
+  def delete_and_send_error
+    bot = Telegram.bot
+    self.destroy
+    bot.send_message(chat_id: user.uid, text: "❌ la sessione non è stata salvata perché chiusa dopo meno di 5 minuti")
   end
   
   def start_job
