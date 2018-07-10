@@ -57,7 +57,7 @@ class WorkSession < ApplicationRecord
   
   def send_confirmation_message
     bot = Telegram.bot
-    self.client.nil? ? client = '' : client = " per #{self.client}"
+    self.client.nil? || self.client == '' ? client = '' : client = " per #{self.client}"
     case self.activity
     when 'Ufficio'
       activity = ' in ufficio'
@@ -65,7 +65,7 @@ class WorkSession < ApplicationRecord
       activity = ' dal cliente'
     when 'Remoto'
       activity = ' da remoto'
-    when nil
+    else
       activity = ''
     end
     text = "▶️ la sessione#{activity + client} delle #{self.start_date.strftime("%H:%M")} è stata chiusa dopo #{self.duration_in_words}"
