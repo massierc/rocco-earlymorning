@@ -56,18 +56,22 @@ class WorkSession < ApplicationRecord
   end
 
   def calculate_wait_time(user)
-    if Time.current < start_lunch && !user.had_lunch?
-      wait_time = start_lunch
-    elsif Time.current.between?(start_lunch, end_lunch) && !user.had_lunch?
-      wait_time = Time.current + 0.5.hours
-    elsif self.lunch?
-      wait_time = Time.current + 1.hours
-    elsif Time.current.between?(end_lunch, eod(DateTime.current))
-      wait_time = eod(DateTime.current)
-    elsif Time.current > eod(DateTime.current)
-      wait_time = Time.current + 0.5.hours
+    if user.company_id == 1
+      wait_time = Time.current + 30.minutes
     else
-      wait_time = Time.current + 1.hours
+      if Time.current < start_lunch && !user.had_lunch?
+        wait_time = start_lunch
+      elsif Time.current.between?(start_lunch, end_lunch) && !user.had_lunch?
+        wait_time = Time.current + 30.minutes
+      elsif self.lunch?
+        wait_time = Time.current + 1.hours
+      elsif Time.current.between?(end_lunch, eod(DateTime.current))
+        wait_time = eod(DateTime.current)
+      elsif Time.current > eod(DateTime.current)
+        wait_time = Time.current + 30.minutes
+      else
+        wait_time = Time.current + 1.hours
+      end
     end
   end
   
