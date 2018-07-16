@@ -89,8 +89,8 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       next_business_day = next_business_day(DateTime.current)
       next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 9, 30)
       @user.destroy_scheduled_jobs('WorkTimerJob')
-      @user.destroy_scheduled_jobs('UpdateTimesheetsJob').perform_later(@user.id)
       @user.destroy_scheduled_jobs('HelloJob').set(wait_until: next_business_day).perform_later(@user.uid)
+      @user.destroy_scheduled_jobs('UpdateTimesheetsJob').perform_later(@user.id)
     elsif new_project?(data)
       @work_day.wait_for_new_client!
       @bot.send_message(chat_id: @user.uid, text: 'Su cosa lavori?')
