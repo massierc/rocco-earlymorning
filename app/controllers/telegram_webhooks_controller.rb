@@ -20,7 +20,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     msg = {
       user: @user,
       context: @work_day.aasm_state,
-
       message: _message
     }
     if @user.setup > 0

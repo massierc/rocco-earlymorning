@@ -1,6 +1,8 @@
 class WorkSession < ApplicationRecord
   include ActionView::Helpers::DateHelper
   include Utils
+  include BusinessDate
+
   belongs_to :user
   belongs_to :work_day
 
@@ -29,6 +31,14 @@ class WorkSession < ApplicationRecord
     self.client == "Pranzo"
   end
 
+  def start_lunch 
+    Time.current.change(hour: 12, min: 25)
+  end
+
+  def end_lunch
+    Time.current.change(hour: 14, min: 25)
+  end
+
   def close_active_sessions
     self.user.close_active_sessions
   end
@@ -43,6 +53,18 @@ class WorkSession < ApplicationRecord
     bot = Telegram.bot
     self.destroy
     bot.send_message(chat_id: user.uid, text: "❌ la sessione non è stata salvata perché chiusa dopo meno di 5 minuti")
+  end
+
+  def calculate_wait_time(user)
+    if Time.current < start_lunch && !user.had_lunch?
+      wait_time = start_lunch
+    elsif Time.current.between?(start_lunch, end_lunch) && !user.had_lunch?
+      wait_time = Time.current + 0.5.hours
+    elsif self.lunch?
+      wait_time = Time.current + 1.hours
+    else
+      wait_time = eod(DateTime.current)
+    end
   end
   
   def start_job

@@ -12,4 +12,8 @@ module BusinessDate
     date += inc while (date.wday % 7 == 0) || (date.wday % 7 == 6)
     date
   end
+
+  def eod(day)
+    Time.new(day.year, day.month, day.day, 19, 00)
+  end
 end

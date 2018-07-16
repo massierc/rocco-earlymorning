@@ -37,11 +37,21 @@ class StateHandler
 
   def waiting_for_client
     @work_day.wait_for_end_of_session!
-    @bot.send_message(
-      chat_id: @user.uid, 
-      text: "Scrivimi quando finisci, mi farò comunque vivo tra mezz'ora per assicurarmi che non ti scordi di me 😃"
-    )
-    @user.destroy_scheduled_jobs('WorkTimerJob').set(wait: 30.minutes).perform_later(@user.id)
+    work_session = @work_day.work_sessions.last
+    if @user.company_id == 1
+      @bot.send_message(
+        chat_id: @user.uid, 
+        text: "Scrivimi quando finisci, mi rifarò vivo tra mezz'ora 😃"
+      )
+      @user.destroy_scheduled_jobs('WorkTimerJob').set(wait: 30.minutes).perform_later(@user.id)
+    elsif @user.company_id == 2
+      @bot.send_message(
+        chat_id: @user.uid, 
+        text: "Scrivimi quando finisci 😃"
+      )
+      wait_time = work_session.calculate_wait_time(@user)
+      @user.destroy_scheduled_jobs('WorkTimerJob').set(wait_until: wait_time).perform_later(@user.id)
+    end
   end
 
   def waiting_for_end_of_session

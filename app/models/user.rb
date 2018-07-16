@@ -44,4 +44,8 @@ class User < ApplicationRecord
     end
     work_day
   end
+
+  def had_lunch?
+    self.find_or_create_workday.work_sessions.find_by_client("Pranzo") ? true : false
+  end
 end
