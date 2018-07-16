@@ -50,6 +50,10 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       handle_state(@work_day.aasm_state)
     when 'waiting_for_end_of_session'
       @user.destroy_scheduled_jobs('WorkTimerJob').perform_now(@user.id)
+    when 'workday_finished'
+      respond_with :message, text: "Ehi #{msg[:message]['from']['username']}, la giornata è finita!"
+      respond_with :message, text: "Ci risentiamo domani 🙂"
+      return
     else
       respond_with :message, text: "Scusa, non capisco cosa intendi con #{msg[:message]['text']} 🤔"
       return
