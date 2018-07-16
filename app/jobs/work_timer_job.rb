@@ -18,8 +18,9 @@ class WorkTimerJob < ApplicationJob
         [{text: 'Sto ancora lavorando 🤓', callback_data: cb_data(work_day.aasm_state, 'still_working')}],
         [{text: 'No, ho finito 👍', callback_data: cb_data(work_day.aasm_state, 'finished')}]
       ]
-      start_lunch = Time.current.change(hour: 12, min: 25)
-      end_lunch = Time.current.change(hour: 14, min: 15)
+
+      start_lunch = ws.start_lunch
+      end_lunch = ws.end_lunch
 
       if Time.current.between?(start_lunch, end_lunch) && !ws.lunch?
         timer_text.chomp!('?')

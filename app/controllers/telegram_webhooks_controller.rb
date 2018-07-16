@@ -12,7 +12,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     @user = User.find_or_initialize_by(uid: @message['from']['id'], username: @message['from']['username'])
     @user.setup = 3 unless @user.persisted?
     @user.save
-    @work_day = @user.work_days.find_by_date(Date.current)
+    @work_day = @user.find_or_create_workday
   end
 
   def message(_message)
@@ -20,7 +20,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     msg = {
       user: @user,
       context: @work_day.aasm_state,
-
       message: _message
     }
     if @user.setup > 0
@@ -303,11 +302,30 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
 
   def handle_setup
     case @user.setup
+    when 5
+      text = @message['text'].capitalize.chomp.strip
+      if %w[Mono Pluri].include? text
+        text == 'Mono' ? @user.update(company_id: 2, setup: 0) : @user.update(company_id: 1, setup: 0)
+        respond_with :message, text: 'Grazie mille, il setup è completo!'
+        handle_state(@work_day.aasm_state)
+      else
+        respond_with :message, text: 'Scusa, non ho capito: sei mono o pluri cliente?', reply_markup: {
+          keyboard: [%w[Mono Pluri]],
+          resize_keyboard: true,
+          one_time_keyboard: true,
+          selective: true
+        }
+      end
     when 4
       if %w[EM EMF].include? @message['text'].upcase.chomp
         if @message['text'] == 'EM'
-          @user.update(company_id: 1, setup: 0)
-          respond_with :message, text: 'Grazie mille, il setup è completo!'
+          respond_with :message, text: 'Perfetto, e sei mono o pluri cliente?', reply_markup: {
+            keyboard: [%w[Mono Pluri]],
+            resize_keyboard: true,
+            one_time_keyboard: true,
+            selective: true
+          }
+          @user.update(setup: 5)
         else
           @user.update(company_id: 0, setup: 0)
           respond_with :message, text: 'Grazie mille, ti contatterò alle 19:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
@@ -323,7 +341,7 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
         end
 
       else
-        respond_with :message, text: 'Scusa non ho capito, sei EM o EM Finance (EM/EMF)', reply_markup: {
+        respond_with :message, text: 'Scusa non ho capito, sei EM o EM Finance (EM/EMF)?', reply_markup: {
           keyboard: [%w[EM EMF]],
           resize_keyboard: true,
           one_time_keyboard: true,
@@ -339,7 +357,7 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
         @user.update(setup: 2)
       else
         respond_with :message, text: 'Grazie sei stato autenticato correttamente' unless @user.sheet_id
-        respond_with :message, text: "Ora mi serve solo l\'indirizzo del tuo TimeSheet su Google Drive"
+        respond_with :message, text: "Ora ho bisogno dell\'indirizzo del tuo TimeSheet su Google Drive"
         @user.update(setup: 1)
       end
     when 1
@@ -347,7 +365,7 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
       @user.update(sheet_id: sheet_id)
       @user.update(setup: 4)
 
-      respond_with :message, text: 'Grazie mille, ora mi serve solo sapere se lavori per EM o EM Finance', reply_markup: {
+      respond_with :message, text: 'Grazie mille, ora mi serve sapere se lavori per EM o EM Finance', reply_markup: {
         keyboard: [%w[EM EMF]],
         resize_keyboard: true,
         one_time_keyboard: true,
