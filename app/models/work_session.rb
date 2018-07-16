@@ -62,8 +62,12 @@ class WorkSession < ApplicationRecord
       wait_time = Time.current + 0.5.hours
     elsif self.lunch?
       wait_time = Time.current + 1.hours
-    else
+    elsif Time.current.between?(end_lunch, eod(DateTime.current))
       wait_time = eod(DateTime.current)
+    elsif Time.current > eod(DateTime.current)
+      wait_time = Time.current + 0.5.hours
+    else
+      wait_time = Time.current + 1.hours
     end
   end
   
