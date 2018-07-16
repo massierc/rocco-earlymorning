@@ -46,7 +46,8 @@ class WorkTimerJob < ApplicationJob
         }
       )
 
-      user.destroy_scheduled_jobs('WorkTimerJob').set(wait: 30.minutes).perform_later(user.id)
+      wait_time = work_session.calculate_wait_time(user)
+      user.destroy_scheduled_jobs('WorkTimerJob').set(wait_until: wait_time).perform_later(user.id)
     else
       work_day = user.find_or_create_workday
       sh = StateHandler.new(user: user, work_day: work_day)
