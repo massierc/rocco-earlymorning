@@ -16,6 +16,7 @@ class WorkDay < ApplicationRecord
           :waiting_for_new_client,
           :waiting_for_end_of_session,
           :waiting_for_user_input,
+          :waiting_for_confirmation,
           :workday_finished
           
     event :wait_for_activity do
@@ -31,15 +32,23 @@ class WorkDay < ApplicationRecord
     end
 
     event :wait_for_end_of_session do
-      transitions from: :waiting_for_client, to: :waiting_for_end_of_session
+      transitions from: [:waiting_for_client, :waiting_for_confirmation], to: :waiting_for_end_of_session
     end
 
-    event :end_session do
+    event :wait_for_user_input do
       transitions from: :waiting_for_end_of_session, to: :waiting_for_user_input
     end
 
+    event :wait_for_confirmation do
+      transitions from: :waiting_for_user_input, to: :waiting_for_confirmation
+    end
+
+    event :wait_for_morning do
+      transitions from: :waiting_for_user_input, to: :waiting_for_morning
+    end
+
     event :end do
-      transitions from: :waiting_for_user_input, to: :workday_finished
+      transitions from: :waiting_for_confirmation, to: :workday_finished
     end
   end
 

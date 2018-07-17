@@ -19,8 +19,9 @@ class StateHandler
   end
   
   def waiting_for_activity
-    @work_day.wait_for_client!
     project_list = Authorizer.new(@user.uid).list_projects(Authorizer.new(@user.uid).project_cells)
+    return unless project_list
+    @work_day.wait_for_client!
     keyboard = []
     project_list.each do |p|
       keyboard_row = p.map { |proj| { text: proj, callback_data: cb_data(@work_day.aasm_state, proj) } }  
@@ -54,7 +55,7 @@ class StateHandler
   end
 
   def waiting_for_end_of_session
-    @work_day.end_session!
+    @work_day.wait_for_user_input!
     @bot.send_message(
       chat_id: @user.uid, 
       text: "Vuoi aggiungere una nuova attività?", 
@@ -62,7 +63,7 @@ class StateHandler
         inline_keyboard: [
           [
             { text: 'Sì', callback_data: cb_data(@work_day.aasm_state, 'add_new_activity') },
-            { text: 'No', callback_data: cb_data(@work_day.aasm_state, 'good_night') }
+            { text: 'No', callback_data: cb_data(@work_day.aasm_state, 'ask_confirmation') }
           ]
         ]
       }
@@ -70,6 +71,18 @@ class StateHandler
   end
 
   def waiting_for_user_input
-    waiting_for_morning
+    @work_day.wait_for_confirmation!
+    @bot.send_message(
+      chat_id: @user.uid, 
+      text: "❗️ Sei sicuro? Se confermi aggiornerò il tuo timesheet e non potrai aggiungere attività per oggi ❗️", 
+      reply_markup: { 
+        inline_keyboard: [
+          [
+            { text: 'Sì, chiudi e aggiorna 👍', callback_data: cb_data(@work_day.aasm_state, 'good_night') },
+            { text: 'No, aspetta 🖐', callback_data: cb_data(@work_day.aasm_state, 'ask_again') }
+          ]
+        ]
+      }
+    )
   end
 end

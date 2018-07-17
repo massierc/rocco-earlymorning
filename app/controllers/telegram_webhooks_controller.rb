@@ -98,6 +98,10 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     elsif new_project?(data)
       @work_day.wait_for_new_client!
       @bot.send_message(chat_id: @user.uid, text: 'Su cosa lavori?')
+    elsif new_activity?(data)
+      @work_day.wait_for_morning!
+    elsif ask_again?(data)
+      @work_day.wait_for_end_of_session!
     else
       update_worksession(data)
     end
@@ -133,11 +137,19 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     end
 
   def workday_finished?(data)
-    data['state'] == 'waiting_for_user_input' && data['value'] == 'good_night'
+    data['state'] == 'waiting_for_confirmation' && data['value'] == 'good_night'
   end
 
   def new_project?(data)
     data['state'] == 'waiting_for_client' && data['value'] == 'new_proj'
+  end
+
+  def new_activity?(data)
+    data['state'] == 'waiting_for_user_input' && data['value'] == 'add_new_activity'
+  end
+
+  def ask_again?(data)
+    data['state'] == 'waiting_for_confirmation' && data['value'] == 'ask_again'
   end
 
   def premimimi
