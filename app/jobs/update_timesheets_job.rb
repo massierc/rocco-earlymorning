@@ -16,10 +16,7 @@ class UpdateTimesheetsJob < ApplicationJob
         (c.duration_in_minutes)
       end)].flatten
     end
-
     Authorizer.new(user.uid).update_timesheet_em(user, mapped_sessions)
-    bot = Telegram.bot
-    bot.send_message(chat_id: user.uid, text: 'TimeSheet aggiornato!')
   end
 
   def rounded_hour(duration_in_minutes)
