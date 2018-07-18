@@ -40,7 +40,7 @@ group :development do
   gem 'spring-watcher-listen', '~> 2.0.0'
 end
 
-gem 'telegram-bot'
+gem 'telegram-bot', '0.13.1'
 gem 'googleauth'
 gem 'google-api-client'
 gem 'sidekiq'
