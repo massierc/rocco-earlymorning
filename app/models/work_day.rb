@@ -55,8 +55,13 @@ class WorkDay < ApplicationRecord
   def send_evening_recap
     return unless self.work_sessions.length > 0
     line_length = 28
-    first_name = self.user.name.split.map(&:capitalize)[0]
-    date = I18n.localize(self.date, format: "%d %b %Y").rjust(line_length - first_name.length)
+    if self.user.name
+      first_name = self.user.name.split.map(&:capitalize)[0]
+      date = I18n.localize(self.date, format: "%d %b %Y").rjust(line_length - first_name.length)
+    else
+      first_name = ""
+      date = I18n.localize(self.date, format: "%d %b %Y").rjust(line_length)
+    end
     opening_tag = "<pre>"
     closing_tag = "</pre>"
     new_line = "\n"
