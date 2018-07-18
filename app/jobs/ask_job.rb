@@ -3,6 +3,8 @@ class AskJob < ApplicationJob
   queue_as :default
 
   def perform(uid)
+    user = User.find_by_uid(uid)
+    return if [1,2].include?(user.company_id)
     # remove previous jobs
     ss = Sidekiq::ScheduledSet.new
     ss.select do |s|
@@ -14,7 +16,6 @@ class AskJob < ApplicationJob
     end.each(&:delete)
 
     bot = Telegram.bot
-    user = User.find_by_uid(uid)
     user_service = Authorizer.new(user.uid)
     user_projects = user_service.project_cells
     project_list  = user_service.list_projects(user_projects) << ['stop']
