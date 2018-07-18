@@ -156,7 +156,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     if @user.setup > 0
       handle_setup
     else
-      AskJob.perform_later(@user.uid)
+      AskJob.perform_later(@user.uid) if @user.company_id == 0
     end
   end
 
