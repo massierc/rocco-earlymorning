@@ -49,10 +49,7 @@ class WorkTimerJob < ApplicationJob
       wait_time = ws.calculate_wait_time(user)
       user.destroy_scheduled_jobs('WorkTimerJob').set(wait_until: wait_time).perform_later(user.id)
     else
-      work_day = user.find_or_create_workday
-      sh = StateHandler.new(user: user, work_day: work_day)
-      bot.send_message(chat_id: user.uid, text: 'Non trovo attività aperte')
-      sh.public_send(work_day.aasm_state)
+      puts "NO WS, e sti cazzi?"
     end
   end
 
