@@ -20,3 +20,4 @@
 db/rocco_development
 credentials/*
 dump.rdb
+.DS_Store
