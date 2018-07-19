@@ -3,9 +3,8 @@ class UpdateTimesheetsJob < ApplicationJob
   include Utils
   queue_as :default
 
-  def perform(user_id)
+  def perform(user_id, date = Time.current)
     user = User.find(user_id)
-    date = Time.current
     user.close_active_sessions
     date_sessions = user.work_sessions.where(created_at: date.beginning_of_day..date.end_of_day)
     same_sessions = date_sessions.group_by do |ws|
