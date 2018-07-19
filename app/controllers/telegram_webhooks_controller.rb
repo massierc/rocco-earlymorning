@@ -52,11 +52,11 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       @user.destroy_scheduled_jobs('WorkTimerJob').perform_now(@user.id)
     when 'workday_finished'
       respond_with :message, text: "Ehi #{msg[:message]['from']['username']}, la giornata è finita!"
-      respond_with :message, text: "Ci risentiamo domani 🙂"
-      return
+      respond_with :message, text: 'Ci risentiamo domani 🙂'
+      nil
     else
       respond_with :message, text: "Scusa, non capisco cosa intendi con #{msg[:message]['text']} 🤔"
-      return
+      nil
     end
   end
 
@@ -95,6 +95,14 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       @user.destroy_scheduled_jobs('WorkTimerJob')
       @user.destroy_scheduled_jobs('HelloJob').set(wait_until: next_business_day).perform_later(@user.uid)
       @user.destroy_scheduled_jobs('UpdateTimesheetsJob').perform_later(@user.id)
+      if @user.special
+        r = random_rocco
+        if r.include?('gif')
+          @bot.send_document(chat_id: @user.uid, document: File.open(r))
+        else
+          @bot.send_photo(chat_id: @user.uid, photo: File.open(r))
+        end
+      end
     elsif new_project?(data)
       @work_day.wait_for_new_client!
       @bot.send_message(chat_id: @user.uid, text: 'Su cosa lavori?')
@@ -119,8 +127,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     elsif data['state'] == 'waiting_for_client'
       @user.active_worksession.update(client: data['value'])
       respond_with :message, text: "▶️ stai lavorando su: #{data['value']}"
-    else
-      return
     end
   end
 
@@ -131,10 +137,10 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   def still_working?(data)
     data['state'] == 'waiting_for_end_of_session' && data['value'] == 'still_working'
   end
-  
-    def lunch?(data)
-      data['state'] == 'waiting_for_end_of_session' && data['value'] == 'lunch'
-    end
+
+  def lunch?(data)
+    data['state'] == 'waiting_for_end_of_session' && data['value'] == 'lunch'
+  end
 
   def workday_finished?(data)
     data['state'] == 'waiting_for_confirmation' && data['value'] == 'good_night'
@@ -168,9 +174,9 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
         RiccardoJob.perform_later
         respond_with :message, text: "Ciao #{user}, job NWO avviato con successo per il mese in corso 👍"
       elsif is_month?(args[0])
-          month = args[0].strip.downcase.capitalize
-          RiccardoJob.perform_later(month)
-          respond_with :message, text: "Ciao #{user}, job NWO avviato con successo per #{args[0]} #{Date.today.year.to_s} 👍"
+        month = args[0].strip.downcase.capitalize
+        RiccardoJob.perform_later(month)
+        respond_with :message, text: "Ciao #{user}, job NWO avviato con successo per #{args[0]} #{Date.today.year} 👍"
       else
         respond_with :message, text: "#{user}, #{args.join(' ')} non mi sembra un mese, ritenta!"
       end
@@ -349,7 +355,7 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
 
         if @user.company_id == 0
           next_business_day = next_business_day(DateTime.current)
-          next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 19, 00)
+          next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 19, 0o0)
           job = AskJob.set(wait_until: next_business_day).perform_later(@user.uid)
           @user.update(jid: job.job_id, level: 3)
         else
