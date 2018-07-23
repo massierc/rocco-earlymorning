@@ -390,7 +390,7 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
         @user.update(setup: 1)
       end
     when 1
-      sheet_id = @message['text'].split('/').max_by(&:length)
+      sheet_id = @message['text'].split('spreadsheets/d/')[1].split('/')[0]
       @user.update(sheet_id: sheet_id)
       @user.update(setup: 4)
 
