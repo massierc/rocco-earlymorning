@@ -10,12 +10,18 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     @bot = Telegram.bot
     @message = ActiveSupport::HashWithIndifferentAccess.new(payload)
     @user = User.find_or_initialize_by(uid: @message['from']['id'], username: @message['from']['username'])
-    @user.setup = 3 unless @user.persisted?
-    @user.save
-    @work_day = @user.find_or_create_workday
+    @user.update(setup: 3) unless @user.persisted?
+    if @user.save
+      @work_day = @user.find_or_create_workday
+    else
+      attribute = @user.errors.messages.first[0].to_s.capitalize
+      error = @user.errors.messages.first[1][0]
+      @bot.send_message(chat_id: @user.uid, text: "❌ #{attribute} #{error}")
+    end
   end
 
   def message(_message)
+    return unless @user.persisted?
     @work_day = @user.find_or_create_workday
     msg = {
       user: @user,
@@ -242,6 +248,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def start(*)
+    return unless @user.persisted?
     respond_with :message, text: "Ciao #{@message[:from][:first_name]} 😃"
     respond_with :message, text: 'Prima di cominciare ho bisogno che mi autorizzi a modificare il tuo TimeSheet, per favore clicca su questo link'
     respond_with :message, text: 'ed in seguito digita il codice di autorizzazione'

@@ -20,7 +20,7 @@ ActiveRecord::Schema.define(version: 20180703161907) do
     t.string "username"
     t.string "sheet_id"
     t.string "jid"
-    t.integer "setup", default: 2
+    t.integer "setup", default: 3
     t.string "who"
     t.boolean "special", default: false
     t.string "note"
