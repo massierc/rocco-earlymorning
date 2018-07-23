@@ -146,8 +146,14 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   def start(*)
     return unless @user.persisted?
     respond_with :message, text: "Ciao #{@message[:from][:first_name]} 😃"
-    respond_with :message, text: 'Prima di cominciare ho bisogno che mi autorizzi a modificare il tuo TimeSheet, per favore clicca su questo link'
-    respond_with :message, text: 'ed in seguito digita il codice di autorizzazione'
+    respond_with :message, text: 'Prima di cominciare ho bisogno che mi autorizzi a modificare il tuo TimeSheet, per favore clicca su questo link ed in seguito digita il codice di autorizzazione che ti verrà fornito:'
+    @url = Authorizer.new(@message[:from][:id]).get_url
+    respond_with :message, text: @url
+    @user.update(setup: 2)
+  end
+
+  def auth
+    respond_with :message, text: 'Clicca su questo link e in seguito digita il codice di autorizzazione che ti verrà fornito:'
     @url = Authorizer.new(@message[:from][:id]).get_url
     respond_with :message, text: @url
     @user.update(setup: 2)
@@ -392,15 +398,14 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
     when 1
       sheet_id = @message['text'].split('spreadsheets/d/')[1].split('/')[0]
       @user.update(sheet_id: sheet_id)
-      @user.update(setup: 4)
 
+      @user.update(setup: 4)
       respond_with :message, text: 'Grazie mille, ora mi serve sapere se lavori per EM o EM Finance', reply_markup: {
         keyboard: [%w[EM EMF]],
         resize_keyboard: true,
         one_time_keyboard: true,
         selective: true
       }
-
     end
   end
 

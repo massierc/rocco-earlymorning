@@ -144,6 +144,7 @@ class Authorizer
 
   def project_cells(sheet_id = @tg_user.sheet_id)
     begin
+      return if service == 0
       projects = service.get_spreadsheet_values(sheet_id, "#{this_month_sheet}!B:C").values
     rescue Google::Apis::ClientError
       return false
