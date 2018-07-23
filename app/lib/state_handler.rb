@@ -20,7 +20,7 @@ class StateHandler
   
   def waiting_for_activity
     project_list = Authorizer.new(@user.uid).list_projects(Authorizer.new(@user.uid).project_cells)
-    if project_list == ["stop"] or project_list.nil?
+    if project_list == ["stop"]
       @bot.send_message(
         chat_id: @user.uid, 
         text: "❌ ehi #{@user.username}, non riesco ad accedere al tuo timesheet. Prova a rifare il setup: /auth", 
