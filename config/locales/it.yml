@@ -1,0 +1,8 @@
+it:
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            username:
+              blank: "non trovato. Controlla di averlo impostato correttamente e riprova."

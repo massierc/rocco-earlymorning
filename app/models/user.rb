@@ -2,6 +2,8 @@ class User < ApplicationRecord
   has_many :work_sessions, dependent: :destroy
   has_many :work_days, dependent: :destroy
 
+  validates :username, presence: true
+
   def active_worksession
     self.work_sessions.find_by_end_date(nil)
   end

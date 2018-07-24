@@ -20,20 +20,26 @@ class StateHandler
   
   def waiting_for_activity
     project_list = Authorizer.new(@user.uid).list_projects(Authorizer.new(@user.uid).project_cells)
-    return unless project_list
-    @work_day.wait_for_client!
-    keyboard = []
-    project_list.each do |p|
-      keyboard_row = p.map { |proj| { text: proj, callback_data: cb_data(@work_day.aasm_state, proj) } }  
-      keyboard << keyboard_row
+    if project_list == ["stop"]
+      @bot.send_message(
+        chat_id: @user.uid, 
+        text: "❌ ehi #{@user.username}, non riesco ad accedere al tuo timesheet. Prova a rifare il setup: /auth", 
+      )
+    else
+      @work_day.wait_for_client!
+      keyboard = []
+      project_list.each do |p|
+        keyboard_row = p.map { |proj| { text: proj, callback_data: cb_data(@work_day.aasm_state, proj) } }  
+        keyboard << keyboard_row
+      end
+      btn_add_new_proj = [{ text: '+ aggiungi', callback_data: cb_data(@work_day.aasm_state, 'new_proj') }]
+      keyboard << btn_add_new_proj
+      @bot.send_message(
+        chat_id: @user.uid, 
+        text: 'A cosa stai lavorando?', 
+        reply_markup: { inline_keyboard: keyboard }
+      )
     end
-    btn_add_new_proj = [{ text: '+ aggiungi', callback_data: cb_data(@work_day.aasm_state, 'new_proj') }]
-    keyboard << btn_add_new_proj
-    @bot.send_message(
-      chat_id: @user.uid, 
-      text: 'A cosa stai lavorando?', 
-      reply_markup: { inline_keyboard: keyboard }
-    )
   end
 
   def waiting_for_client
