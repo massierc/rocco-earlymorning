@@ -142,19 +142,43 @@ class Authorizer
     workdays[find_current_workday(workdays)]
   end
 
-  def project_cells(sheet_id = @tg_user.sheet_id)
+  def project_cells(sheet_id = @tg_user.sheet_id, prevent_loop=false)
     begin
       return if service == 0
       projects = service.get_spreadsheet_values(sheet_id, "#{this_month_sheet}!B:C").values
-    rescue Google::Apis::ClientError
+    rescue Google::Apis::ClientError => e
+      if e.message.include?('Unable to parse range') && !prevent_loop
+        if @tg_user.company_id == 0
+          generate_this_month_timesheet
+        else
+          pm_auth = Authorizer.new(giuditta_uid)
+          pm_auth.generate_this_month_timesheet
+        end
+        project_cells(prevent_loop=true)
+      end
       return false
     end
 
     projects
   end
 
+  def generate_this_month_timesheet(sheet_id = @tg_user.sheet_id)
+    sheets = service.get_spreadsheet(sheet_id).sheets
+    template_sheet_id = sheets.find {|s| s.properties.title == "Template"}.properties.sheet_id
+    
+    requests = []
+    requests.push(
+      duplicate_sheet: {
+        new_sheet_name: this_month_sheet,
+        source_sheet_id: template_sheet_id
+      })
+
+    body = {requests: requests}
+
+    service.batch_update_spreadsheet(sheet_id, body, {})
+  end
+
   def project_cells_with_name(sheet_id = @tg_user.sheet_id)
-    # byebug
     begin
       projects = service.get_spreadsheet_values(sheet_id, "#{this_month_sheet}!A:C").values
     rescue Google::Apis::ClientError
