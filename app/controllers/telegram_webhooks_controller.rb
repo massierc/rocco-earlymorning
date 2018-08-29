@@ -320,6 +320,9 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       Authorizer.new(@message[:from][:id]).update_timesheet(@user)
       m = "Grazie, il tuo TimeSheet è stato aggiornato, premi /nota per aggiungere un commento.
 Se vuoi aggiungere altre ore di lavoro /premimimi!"
+
+      @user.work_days.create!
+
       if @user.special
         r = random_rocco
         if r.include?('gif')
