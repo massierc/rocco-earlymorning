@@ -32,10 +32,5 @@ class AskJob < ApplicationJob
     job = AskJob.set(wait_until: next_business_day).perform_later(uid)
     user.update(jid: job.job_id, level: 3)
 
-
-    if DateTime.now.wday == 5
-      bot.send_message(chat_id: uid, text: user.missing_days) if user.missing_days
-    end
-
   end
 end

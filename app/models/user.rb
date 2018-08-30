@@ -4,17 +4,6 @@ class User < ApplicationRecord
 
   validates :username, presence: true
 
-  def missing_days
-    updates_days = self.work_days.where(created_at: DateTime.now.beginning_of_week..DateTime.now.end_of_week).collect{|x|x.created_at.wday}
-    missing = (1..5).to_a - updates_days
-
-    if missing.empty?
-      return false
-    else
-      "Hey, you have forgotten to update the timesheets these days: " + missing.map{|l| Date::DAYNAMES[l] }.join(", ")
-    end
-  end
-  
   def active_worksession
     self.work_sessions.find_by_end_date(nil)
   end
