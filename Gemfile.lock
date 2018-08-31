@@ -132,6 +132,7 @@ GEM
     nokogiri (1.8.4)
       mini_portile2 (~> 2.3.0)
     os (1.0.0)
+    pg (1.1.2)
     pry (0.11.3)
       coderay (~> 1.1.0)
       method_source (~> 0.9.0)
@@ -275,6 +276,7 @@ DEPENDENCIES
   googleauth
   hirb
   listen (>= 3.0.5, < 3.2)
+  pg
   pry
   pry-byebug
   pry-doc
@@ -296,4 +298,4 @@ DEPENDENCIES
   telegram-bot (= 0.13.1)
 
 BUNDLED WITH
-   1.16.2
+   1.16.4

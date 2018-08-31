@@ -81,3 +81,12 @@ test:
 production:
   <<: *default
   database: /home/gildo/rocco_production
+
+
+production:
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  database: rocco_production
+  username: rocco
+  password: rocco_database_password_is_super_secret
