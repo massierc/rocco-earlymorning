@@ -151,8 +151,8 @@ class Authorizer
         if @tg_user.company_id == 0
           generate_this_month_timesheet
         else
-          pm_auth = Authorizer.new(giuditta_uid)
-          pm_auth.generate_this_month_timesheet
+          # pm_auth = Authorizer.new(giuditta_uid)
+          # pm_auth.generate_this_month_timesheet
         end
         project_cells(prevent_loop=true)
       end
