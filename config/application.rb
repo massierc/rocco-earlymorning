@@ -38,7 +38,7 @@ module Rocco
 end
 
 Raven.configure do |config|
-  config.dsn = 'https://8950a242a8b54ed0855cac210682cd7c:700544d635974c4e8e9f5f89eb0962ad@sentry.io/291858'
+  config.dsn = 'https://849ce2f806f343578377a53f6ff4564b:270e9e44e51b4ec3a32ddee9ab10887f@sentry.io/1277644'
 end
 
 Sidekiq::Extensions.enable_delay!
