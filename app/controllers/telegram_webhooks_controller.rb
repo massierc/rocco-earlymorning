@@ -22,6 +22,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   def message(_message)
     return unless @user.persisted?
+    return unless debugging_with('ElenorGee', 'marinamo', 'massierc')
     @work_day = @user.find_or_create_workday
     msg = {
       user: @user,
@@ -193,6 +194,15 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     else
       respond_with :message, text: "Scusa, non capisco cosa intendi con #{msg[:message]['text']} 🤔"
       nil
+    end
+  end
+
+  def debugging_with(*users)
+    if users.include? @message['from']['username']
+      true
+    else
+      respond_with :message, text: "Scusa, sono in manutenzione. Tornerò presto 🍆"
+      false
     end
   end
 
