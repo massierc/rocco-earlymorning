@@ -146,6 +146,7 @@ class Authorizer
     begin
       return if service == 0
       projects = service.get_spreadsheet_values(sheet_id, "#{this_month_sheet}!B:C").values
+
     rescue Google::Apis::ClientError => e
       if e.message.include?('Unable to parse range') && !prevent_loop
         if @tg_user.company_id == 0
@@ -164,8 +165,10 @@ class Authorizer
 
   def generate_this_month_timesheet(sheet_id = @tg_user.sheet_id)
     sheets = service.get_spreadsheet(sheet_id).sheets
-    template_sheet_id = sheets.find {|s| s.properties.title == "Template"}.properties.sheet_id
-    
+    template_sheet_id = sheets.find do |s|
+      return unless s && s.properties
+      s.properties.title == "Template"}.properties.sheet_id
+    end
     requests = []
     requests.push(
       duplicate_sheet: {
