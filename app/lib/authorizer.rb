@@ -165,10 +165,9 @@ class Authorizer
 
   def generate_this_month_timesheet(sheet_id = @tg_user.sheet_id)
     sheets = service.get_spreadsheet(sheet_id).sheets
-    template_sheet_id = sheets.find do |s|
-      return unless s && s.properties
-      s.properties.title == "Template"}.properties.sheet_id
-    end
+    template_sheet = sheets.find { |s| s.properties.title == "Template"}
+    return unless template_sheet
+    template_sheet_id = template_sheet.properties.sheet_id
     requests = []
     requests.push(
       duplicate_sheet: {
