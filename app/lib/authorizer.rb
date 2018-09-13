@@ -200,8 +200,12 @@ class Authorizer
   end
 
   def list_activities(cells, project)
-    cells = cells.select{|m| m.include?(project)}.map{|x| x[-1]} << "stop"
-    cells = cells.each_slice(4).to_a
+    if cells
+      cells = cells.select{|m| m.include?(project)}.map{|x| x[-1]} << "stop"
+      cells = cells.each_slice(4).to_a
+    else
+      [["stop"]]
+    end
   end
 
   def find_project_cell(cells, project, activity)
