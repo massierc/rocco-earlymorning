@@ -22,8 +22,8 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   def message(_message)
     return unless @user.persisted?
-    return unless @user.company_id == 0 || debugging_with('ElenorGee', 'marinamo')
-    @work_day = @user.find_or_create_workday
+    return unless @user.company_id == 0 || debugging_with('ElenorGee', 'marinamo', 'massierc')
+    @work_day = @user.find_or_create_workday if @user.company_id == 1
     msg = {
       user: @user,
       context: @work_day.aasm_state,

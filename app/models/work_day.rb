@@ -1,4 +1,6 @@
 class WorkDay < ApplicationRecord
+  after_destroy :delete_active_jobs
+
   include AASM
   include Utils
 
@@ -92,5 +94,11 @@ class WorkDay < ApplicationRecord
             + closing_tag
     Telegram.bot.send_message(chat_id: self.user.uid, text: "Ecco il tuo recap giornaliero 👇")
     Telegram.bot.send_message(chat_id: self.user.uid, text: "#{message}", parse_mode: :HTML)    
+  end
+
+  private
+
+  def delete_active_jobs
+    self.user.destroy_scheduled_jobs('WorkTimerJob')
   end
 end

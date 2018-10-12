@@ -54,16 +54,12 @@ class Authorizer
   end
 
   def service
-    begin
-      @credentials.fetch_access_token!({}) if @credentials.expired?
-      service = Google::Apis::SheetsV4::SheetsService.new
-      service.client_options.application_name = application_name
-      service.authorization = @credentials
+    @credentials.fetch_access_token!({}) if @credentials.expired?
+    service = Google::Apis::SheetsV4::SheetsService.new
+    service.client_options.application_name = application_name
+    service.authorization = @credentials
 
-      service
-    rescue
-      return 0
-    end
+    service
   end
 
   def update_timesheet(user = @tg_user)
@@ -87,7 +83,7 @@ class Authorizer
 
     work_sessions.each do |ws|
       next if ws[1].blank? || ws[2] == 0 || ws[0] =~ /pranzo/i
-      pm_auth = Authorizer.new(giuditta_uid)
+      pm_auth = Rails.env.production? ? Authorizer.new(giuditta_uid) : Authorizer.new(@tg_user.uid)
       pm_service = pm_auth.service
       
       em_project_row = pm_auth.find_project_cell_with_name(pm_auth.project_cells_with_name(user.sheet_id), ws[0], ws[1], user.name, false)
@@ -152,8 +148,12 @@ class Authorizer
         if @tg_user.company_id == 0
           generate_this_month_timesheet
         else
-          # pm_auth = Authorizer.new(giuditta_uid)
-          # pm_auth.generate_this_month_timesheet
+          if (Rails.env.production?)
+            pm_auth = Authorizer.new(giuditta_uid)
+          else
+            pm_auth = Authorizer.new(@tg_user.uid)
+          end
+          pm_auth.generate_this_month_timesheet
         end
         project_cells(prevent_loop=true)
       end

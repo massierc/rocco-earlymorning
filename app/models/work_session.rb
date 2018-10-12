@@ -6,7 +6,7 @@ class WorkSession < ApplicationRecord
   belongs_to :user
   belongs_to :work_day
 
-  after_create :start_job
+  # after_create :start_job
   before_create :close_active_sessions
 
   I18n.locale = :it
