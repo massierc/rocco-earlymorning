@@ -208,6 +208,7 @@ class Authorizer
           value: project
         }
       }
+      Telegram.bot.send_message(chat_id: @tg_user.uid, text: "Sto aggiungendo il nuovo cliente...")
       create_missing_row(@tg_user, data)
       find_project_cell(project_cells, project, nil)
     end
