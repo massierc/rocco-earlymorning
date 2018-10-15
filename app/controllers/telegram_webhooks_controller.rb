@@ -178,7 +178,12 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       }
 
     when 2
-      @user.update(level: 1, what: @message['text'])
+      if @user.company_id == 0
+        @user.update(level: 1, what: @message['text'])
+      else  
+        @user.update(level: 1, who: @message['text'])
+        @user.update(level: 1, what: nil)
+      end
       respond_with :message, text: 'E per quanto tempo?', reply_markup: {
         keyboard: [%w[0.5 1 2 3], %w[4 5 6 7], %w[8 stop]],
         resize_keyboard: true,
@@ -188,8 +193,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     when 1
       @user.update(level: 0, howmuch: @message['text'])
       Authorizer.new(@user.uid).update_timesheet
-      msg = """Grazie, il tuo TimeSheet è stato aggiornato, premi /nota per aggiungere un commento.
-          Se vuoi aggiungere altre ore di lavoro /premimimi!"""
+      msg = "Grazie, il tuo TimeSheet è stato aggiornato!\nPremi /nota per aggiungere un commento.\nSe vuoi aggiungere altre ore di lavoro /premimimi!"
       if @user.special
         handle_special_user
       else
