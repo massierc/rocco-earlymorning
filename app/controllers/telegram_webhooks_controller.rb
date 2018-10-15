@@ -185,24 +185,18 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
         one_time_keyboard: true,
         selective: true
       }
-
     when 1
       @user.update(level: 0, howmuch: @message['text'])
-      Authorizer.new(@message[:from][:id]).update_timesheet(@user)
-      m = "Grazie, il tuo TimeSheet è stato aggiornato, premi /nota per aggiungere un commento.
-Se vuoi aggiungere altre ore di lavoro /premimimi!"
+      Authorizer.new(@user.uid).update_timesheet
+      msg = """Grazie, il tuo TimeSheet è stato aggiornato, premi /nota per aggiungere un commento.
+          Se vuoi aggiungere altre ore di lavoro /premimimi!"""
       if @user.special
-        r = random_rocco
-        if r.include?('gif')
-          respond_with :document, document: File.open(r), caption: m
-        else
-          respond_with :photo, photo: File.open(r), caption: m
-        end
+        handle_special_user
       else
-        respond_with :message, text: m
+        respond_with :message, text: msg
       end
     when 0
-      respond_with :message, text: 'Ma lavori ancora? :P Se vuoi aggiungere altre ore di lavoro /premimimi!'
+      respond_with :message, text: 'Ma lavori ancora? 🤓 Se vuoi aggiungere altre ore di lavoro /premimimi!'
     end
   end
 
@@ -248,7 +242,12 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
     end
   end
 
-  def random_rocco
-    Dir[Rails.root.join('public', 'rocco', '*')].sample
+  def handle_special_user
+    random_rocco = Dir[Rails.root.join('public', 'rocco', '*')].sample
+    if random_rocco.include?('gif')
+      respond_with :document, document: File.open(random_rocco), caption: msg
+    else
+      respond_with :photo, photo: File.open(random_rocco), caption: msg
+    end
   end
 end

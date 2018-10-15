@@ -65,7 +65,6 @@ class Authorizer
   def update_timesheet(user = @tg_user)
     day_column = find_current_workday(workday_cells).to_s26.upcase
     project_row = find_project_cell(project_cells, user.who, user.what)
-
     service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!#{day_column}#{project_row}", values(user.howmuch), value_input_option: 'USER_ENTERED')
     user.last_cell = "#{day_column}#{project_row}"
     user.save!
