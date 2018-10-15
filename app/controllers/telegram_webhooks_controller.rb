@@ -17,12 +17,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   def message(_message)
     return unless @user.persisted?
     return unless @user.company_id == 0 || debugging_with('ElenorGee', 'marinamo', 'massierc')
-    @work_day = @user.find_or_create_workday if @user.company_id == 1
-    msg = {
-      user: @user,
-      context: @work_day.aasm_state,
-      message: _message
-    }
     if @user.setup > 0
       if @user.setup == 3
         start
@@ -30,29 +24,13 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
         handle_setup
       end
     else
-      if @user.company_id == 0
-        handle_timesheet
-      else
-        handle_message(msg)
-      end
+      handle_timesheet
     end
   end
 
   def callback_query(data)
     data = JSON.parse(data)
-    return if data['state'] != @work_day.aasm_state
-    msg_id = payload['message']['message_id']
-    @bot.delete_message(chat_id: @user.uid, message_id: msg_id)
-    @work_day = @user.find_or_create_workday
-    manage_worksession(data)
-    ws = @work_day.work_sessions.find_by_end_date(nil)
-    if ws && @work_day.aasm_state == 'waiting_for_client'
-      if ws.client.nil?
-        @bot.send_message(chat_id: @user.uid, text: 'Scusa non ho capito 😕')
-        @work_day.wait_for_activity!
-      end
-    end
-    handle_state(@work_day.aasm_state) unless still_working?(data) || lunch?(data) || workday_finished?(data) || new_project?(data)
+    respond_with :message, text: "Ciao #{@message['from']['username']}!"
   end
 
   def premimimi
@@ -167,29 +145,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   private
-
-  def handle_message(msg)
-    case msg[:context]
-    when 'waiting_for_morning'
-      respond_with :message, text: 'Ciao 👋'
-      handle_state(@work_day.aasm_state)
-    when 'waiting_for_new_client'
-      client = msg[:message]['text']
-      @user.active_worksession.update(client: client)
-      respond_with :message, text: "▶️ aggiunto #{client} alla tua lista di clienti"
-      @work_day.wait_for_client!
-      handle_state(@work_day.aasm_state)
-    when 'waiting_for_end_of_session'
-      @user.destroy_scheduled_jobs('WorkTimerJob').perform_now(@user.id)
-    when 'workday_finished'
-      respond_with :message, text: "Ehi #{msg[:message]['from']['username']}, la giornata è finita!"
-      respond_with :message, text: 'Ci risentiamo domani 🙂'
-      nil
-    else
-      respond_with :message, text: "Scusa, non capisco cosa intendi con #{msg[:message]['text']} 🤔"
-      nil
-    end
-  end
 
   def send_error_message
     attribute = @user.errors.messages.first[0].to_s.capitalize
