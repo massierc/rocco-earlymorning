@@ -179,9 +179,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
     when 2
       @user.update(level: 1, what: @message['text'])
-      # activities = user_service.list_activities(user_projects, @user.who)
       respond_with :message, text: 'E per quanto tempo?', reply_markup: {
-        # keyboard: [[@user.howmuch.to_s, '8'], ['stop']],
         keyboard: [%w[0.5 1 2 3], %w[4 5 6 7], %w[8 stop]],
         resize_keyboard: true,
         one_time_keyboard: true,

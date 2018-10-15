@@ -8,7 +8,7 @@ class AskJob < ApplicationJob
     user_service = Authorizer.new(user.uid)
     user_projects = user_service.project_cells
     project_list  = user_service.list_projects(user_projects) << ['stop']
-    user.update(level: 3)
+    user.company_id == 0 ? user.update(level: 3) : user.update(level: 2)
     bot.send_message(chat_id: uid, text: 'A cosa hai lavorato oggi?', reply_markup: {
       keyboard: project_list,
       resize_keyboard: true,
@@ -16,6 +16,5 @@ class AskJob < ApplicationJob
       selective: true,
     })
     job = AskJob.set(wait_until: next_business_day(DateTime.current)).perform_later(uid)
-    user.update(level: 3)
   end
 end
