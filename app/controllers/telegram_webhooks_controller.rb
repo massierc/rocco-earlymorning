@@ -34,11 +34,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def premimimi
-    if @user.setup > 0
-      handle_setup
-    else
-      AskJob.perform_later(@user.uid) if @user.company_id == 0
-    end
+    @user.setup > 0 ? handle_setup : AskJob.perform_later(@user.uid)
   end
 
   def nwo(*args)
@@ -134,7 +130,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   def nota(*)
     save_context :nota
-
     respond_with :message, text: "#{@message[:from][:first_name]} scrivi ora la nota per #{@user.who}"
   end
 
@@ -174,7 +169,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     case @user.level
     when 3
       @user.update(level: 2, who: @message['text'])
-
       activities = user_service.list_activities(user_projects, @user.who)
       respond_with :message, text: 'Quale activity?', reply_markup: {
         keyboard: activities,
@@ -216,35 +210,11 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
 
   def handle_setup
     case @user.setup
-    when 5
-      text = @message['text'].capitalize.chomp.strip
-      if %w[Mono Pluri].include? text
-        text == 'Mono' ? @user.update(company_id: 2, setup: 0) : @user.update(company_id: 1, setup: 0)
-        respond_with :message, text: 'Grazie mille, il setup è completo!'
-        handle_state(@work_day.aasm_state)
-      else
-        respond_with :message, text: 'Scusa, non ho capito: sei mono o pluri cliente?', reply_markup: {
-          keyboard: [%w[Mono Pluri]],
-          resize_keyboard: true,
-          one_time_keyboard: true,
-          selective: true
-        }
-      end
     when 4
       if %w[EM EMF].include? @message['text'].upcase.chomp
-        if @message['text'] == 'EM'
-          respond_with :message, text: 'Perfetto, e sei mono o pluri cliente?', reply_markup: {
-            keyboard: [%w[Mono Pluri]],
-            resize_keyboard: true,
-            one_time_keyboard: true,
-            selective: true
-          }
-          @user.update(setup: 5)
-        else
-          @user.update(company_id: 0, setup: 0)
-          respond_with :message, text: 'Grazie mille, ti contatterò alle 19:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
-        end
-
+        @message['text'] == 'EM' ? @user.update(company_id: 1, setup: 0) : @user.update(company_id: 0, setup: 0)
+        respond_with :message, text: 'Grazie mille, il setup è completo!'
+        respond_with :message, text: 'Ti contatterò alle 19:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
         if @user.company_id == 0
           next_business_day = next_business_day(DateTime.current)
           next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 19, 0o0)
@@ -276,9 +246,7 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
       end
     when 1
       sheet_id = @message['text'].split('spreadsheets/d/')[1].split('/')[0]
-      @user.update(sheet_id: sheet_id)
-
-      @user.update(setup: 4)
+      @user.update(sheet_id: sheet_id, setup: 4)
       respond_with :message, text: 'Grazie mille, ora mi serve sapere se lavori per EM o EM Finance', reply_markup: {
         keyboard: [%w[EM EMF]],
         resize_keyboard: true,
