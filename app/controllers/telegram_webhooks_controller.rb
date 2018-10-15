@@ -34,7 +34,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def premimimi
-    @user.setup > 0 ? handle_setup : AskJob.perform_later(@user.uid)
+    @user.setup > 0 ? handle_setup : @user.destroy_scheduled_jobs('AskJob').perform_later(@user.uid)
   end
 
   def nwo(*args)
@@ -216,8 +216,8 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
         respond_with :message, text: 'Grazie mille, il setup è completo!'
         respond_with :message, text: 'Ti contatterò alle 19:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
         contact_time = current_or_next_business_day(DateTime.current)
-        job = AskJob.set(wait_until: contact_time).perform_later(@user.uid)
-        @user.update(jid: job.job_id, level: 3)
+        job = @user.destroy_scheduled_jobs('AskJob').set(wait_until: contact_time).perform_later(@user.uid)
+        @user.update(level: 3)
       else
         respond_with :message, text: 'Scusa non ho capito, sei EM o EM Finance (EM/EMF)?', reply_markup: {
           keyboard: [%w[EM EMF]],

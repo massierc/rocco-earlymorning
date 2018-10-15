@@ -4,17 +4,6 @@ class AskJob < ApplicationJob
 
   def perform(uid)
     user = User.find_by_uid(uid)
-    return if [1,2].include?(user.company_id)
-    # remove previous jobs
-    ss = Sidekiq::ScheduledSet.new
-    ss.select do |s|
-      if s.item["args"][0].class == Hash
-        s.item["args"][0]["arguments"].include? (uid)
-      else
-        s.item["args"][0] == uid
-      end
-    end.each(&:delete)
-
     bot = Telegram.bot
     user_service = Authorizer.new(user.uid)
     user_projects = user_service.project_cells
@@ -26,8 +15,7 @@ class AskJob < ApplicationJob
       one_time_keyboard: true,
       selective: true,
     })
-    next_business_day = next_business_day(DateTime.current)
-    job = AskJob.set(wait_until: next_business_day).perform_later(uid)
-    user.update(jid: job.job_id, level: 3)
+    job = AskJob.set(wait_until: next_business_day(DateTime.current)).perform_later(uid)
+    user.update(level: 3)
   end
 end
