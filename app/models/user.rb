@@ -50,4 +50,8 @@ class User < ApplicationRecord
   def had_lunch?
     self.find_or_create_workday.work_sessions.find_by_client("Pranzo") ? true : false
   end
+
+  def is_emf?
+    self.company_id == 0
+  end
 end
