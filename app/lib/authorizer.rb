@@ -168,12 +168,40 @@ class Authorizer
   end
 
   def find_project_cell(cells, project, activity)
-    project_exists = cells.any? { |c| c.include? project }
-    activity_exists = cells.any? { |c| c.include? activity }
+    if @tg_user.is_emf?
+      project_exists = cells.any? { |c| c.include? project }
+      activity_exists = cells.any? { |c| c.include? activity }
 
-    unless @tg_user.is_emf?
+      cell = if project != activity
+        cells.find_index { |arr| arr == [project, activity] }
+      else
+        same_name_project_and_activity = cells.find_index { |arr| arr == [project, activity] }
+        if same_name_project_and_activity
+          same_name_project_and_activity
+        else
+          cells.find_index { |arr| arr.compact == [project] }
+        end
+      end
+
+      if cell
+        return cell += 1
+      else
+        data = {
+          project: {
+            exists: project_exists,
+            value: project
+          },
+          activity: {
+            exists: activity_exists,
+            value: activity
+          }
+        }
+        create_missing_row(@tg_user, data)
+        find_project_cell(project_cells, project, activity)
+      end
+    else
       cell = cells.index([project])
-      return cell + 1 if cell
+      return cell += 1 if cell
       data = {
         project: {
           exists: false,
@@ -182,35 +210,6 @@ class Authorizer
       }
       create_missing_row(@tg_user, data)
       find_project_cell(project_cells, project, nil)
-      return
-    end
-
-    cell = if project != activity
-      cells.find_index { |arr| arr == [project, activity] }
-    else
-      same_name_project_and_activity = cells.find_index { |arr| arr == [project, activity] }
-      if same_name_project_and_activity
-        same_name_project_and_activity
-      else
-        cells.find_index { |arr| arr.compact == [project] }
-      end
-    end
-
-    if cell
-      return cell += 1
-    else
-      data = {
-        project: {
-          exists: project_exists,
-          value: project
-        },
-        activity: {
-          exists: activity_exists,
-          value: activity
-        }
-      }
-      create_missing_row(@tg_user, data)
-      find_project_cell(project_cells, project, activity)
     end
   end
 
