@@ -17,15 +17,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   def message(_message)
     return unless @user.persisted?
     return unless @user.company_id == 0 || debugging_with('ElenorGee', 'marinamo', 'massierc')
-    if @user.setup > 0
-      if @user.setup == 3
-        start
-      else
-        handle_setup
-      end
-    else
-      handle_timesheet
-    end
+    @user.setup > 0 ? handle_setup : handle_timesheet
   end
 
   def callback_query(data)
@@ -73,7 +65,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def pigri
-    admins = %w[gildof riccardocattaneo17]
+    admins = %w[gildof riccardocattaneo17 massierc]
     if admins.include? @message['from']['username']
       respond_with :message, text: "Ciao #{@message['from']['username']}, ecco la lista: "
       I18n.locale = :it
@@ -222,6 +214,8 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
           selective: true
         }
       end
+    when 3
+      start
     when 2
       @auth = Authorizer.new(@message['from']['id']).store_auth(@message[:text])
       if @auth == 0 || @auth.nil?
