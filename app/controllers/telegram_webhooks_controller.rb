@@ -11,13 +11,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     @message = ActiveSupport::HashWithIndifferentAccess.new(payload)
     @user = User.find_or_initialize_by(uid: @message['from']['id'], username: @message['from']['username'])
     @user.update(setup: 3) unless @user.persisted?
-    if @user.save
-      @work_day = @user.find_or_create_workday
-    else
-      attribute = @user.errors.messages.first[0].to_s.capitalize
-      error = @user.errors.messages.first[1][0]
-      @bot.send_message(chat_id: @user.uid, text: "❌ #{attribute} #{error}")
-    end
+    send_error_message unless @user.save
   end
 
   def message(_message)
@@ -197,6 +191,12 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     end
   end
 
+  def send_error_message
+    attribute = @user.errors.messages.first[0].to_s.capitalize
+    error = @user.errors.messages.first[1][0]
+    @bot.send_message(chat_id: @user.uid, text: "❌ #{attribute} #{error}")
+  end
+
   def debugging_with(*users)
     if users.include? @message['from']['username']
       true
@@ -204,92 +204,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       respond_with :message, text: "Scusa, sono in manutenzione. Tornerò presto 🍆"
       false
     end
-  end
-
-  def manage_worksession(data)
-    if session_finished?(data)
-      @user.close_active_sessions
-    elsif still_working?(data)
-      @bot.send_message(chat_id: @user.uid, text: 'Ok, a dopo!')
-    elsif lunch?(data)
-      @user.close_active_sessions
-      create_lunch
-    elsif workday_finished?(data)
-      @work_day.end!
-      @user.close_active_sessions
-      @work_day.send_evening_recap
-      @bot.send_message(chat_id: @user.uid, text: 'Tra poco aggiorno il tuo timesheet. Buona serata 🍻')
-      next_business_day = next_business_day(DateTime.current)
-      next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 9, 30)
-      @user.destroy_scheduled_jobs('WorkTimerJob')
-      @user.destroy_scheduled_jobs('HelloJob').set(wait_until: next_business_day).perform_later(@user.uid)
-      @user.destroy_scheduled_jobs('UpdateTimesheetsJob').perform_later(@user.id)
-      if @user.special
-        r = random_rocco
-        if r.include?('gif')
-          @bot.send_document(chat_id: @user.uid, document: File.open(r))
-        else
-          @bot.send_photo(chat_id: @user.uid, photo: File.open(r))
-        end
-      end
-    elsif new_project?(data)
-      @work_day.wait_for_new_client!
-      @bot.send_message(chat_id: @user.uid, text: 'Su cosa lavori?')
-    elsif new_activity?(data)
-      @work_day.wait_for_morning!
-    elsif ask_again?(data)
-      @work_day.wait_for_end_of_session!
-    else
-      update_worksession(data)
-    end
-  end
-
-  def handle_state(state)
-    sh = StateHandler.new(user: @user, work_day: @work_day)
-    sh.public_send(state)
-  end
-
-  def update_worksession(data)
-    if data['state'] == 'waiting_for_activity'
-      @user.work_sessions.create(start_date: DateTime.current, work_day: @work_day, activity: data['value'])
-      respond_with :message, text: "▶️ lavori da: #{data['value']}"
-    elsif data['state'] == 'waiting_for_client'
-      @user.active_worksession.update(client: data['value'])
-      respond_with :message, text: "▶️ stai lavorando su: #{data['value']}"
-    end
-  end
-
-  def session_finished?(data)
-    data['state'] == 'waiting_for_end_of_session' && data['value'] == 'finished'
-  end
-
-  def still_working?(data)
-    data['state'] == 'waiting_for_end_of_session' && data['value'] == 'still_working'
-  end
-
-  def lunch?(data)
-    data['state'] == 'waiting_for_end_of_session' && data['value'] == 'lunch'
-  end
-
-  def workday_finished?(data)
-    data['state'] == 'waiting_for_confirmation' && data['value'] == 'good_night'
-  end
-
-  def new_project?(data)
-    data['state'] == 'waiting_for_client' && data['value'] == 'new_proj'
-  end
-
-  def new_activity?(data)
-    data['state'] == 'waiting_for_user_input' && data['value'] == 'add_new_activity'
-  end
-
-  def ask_again?(data)
-    data['state'] == 'waiting_for_confirmation' && data['value'] == 'ask_again'
-  end
-
-  def create_lunch
-    @user.work_sessions.create(start_date: DateTime.current, work_day: @work_day, client: 'Pranzo', activity: '')
-    @bot.send_message(chat_id: @user.uid, text: 'Buon appetito! 🍔')
   end
 
   def handle_timesheet
