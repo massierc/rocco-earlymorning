@@ -124,6 +124,42 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     respond_with :message, text: 'Nota aggiunta correttamente'
   end
 
+  def hotline(*args)
+    requestor = @message['from']['username']
+    admins = %w[gildof massierc]
+    respond_with_error_message('hotline') unless admins.include? requestor
+    return unless admins.include? requestor
+    session[:hotline] = { who: '', what: '' }
+    case args.length
+    when 0
+      save_context :hotline_who
+      respond_with :message, text: "A chi vuoi mandare il messaggio?"
+    when 1
+      who = args[0]
+      session[:hotline][:who] = who
+      save_context :hotline_what
+      respond_with :message, text: "Cosa vuoi scrivere a #{who}?"
+    else
+      who = args[0]
+      session[:hotline][:who] = who
+      session[:hotline][:what] = args.drop(1)
+      send_hotline_message
+      session.delete(:hotline)
+    end
+  end
+
+  context_handler :hotline_who do |who|
+    session[:hotline][:who] = who
+    save_context :hotline_what
+    respond_with :message, text: "Cosa vuoi scrivere a #{who}?"
+  end
+  
+  context_handler :hotline_what do |what|
+    session[:hotline][:what] = what
+    send_hotline_message
+    session.delete(:hotline)
+  end
+
   private
 
   def send_error_message
