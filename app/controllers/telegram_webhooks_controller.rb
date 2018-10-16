@@ -30,7 +30,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def nwo(*args)
-    admins = %w[gildof riccardocattaneo17 massierc]
+    admins = %w[gildof massierc riccardocattaneo17 GiudiEM]
     user = @message['from']['username']
     if admins.include? user
       if args.length === 0
@@ -44,23 +44,17 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
         respond_with :message, text: "#{user}, #{args.join(' ')} non mi sembra un mese, ritenta!"
       end
     else
-      respond_with :message, text: "#{user} /nwo è un comando riservato, non sei admin."
-      respond_with :message, text: "L'incidente verrà riportato."
-      sleep(5)
-      respond_with :message, text: '..scherzooo!'
+      respond_with_error_message('nwo')
     end
   end
 
   def unbillable
-    admins = %w[gildof riccardocattaneo17]
+    admins = %w[gildof riccardocattaneo17 GiudiEM]
     if admins.include? @message['from']['username']
       UnbillableJob.perform_later
-      respond_with :message, text: "Ciao #{@message['from']['username']}, job Unbillable avviato con successo 💩"
+      respond_with :message, text: "Ciao #{@message['from']['username']}, job Unbillable avviato con successo 👍"
     else
-      respond_with :message, text: "#{@message['from']['username']} /unbillable è un comando riservato, non sei admin."
-      respond_with :message, text: "L'incidente verrà riportato."
-      sleep(5)
-      respond_with :message, text: '..scherzooo!'
+      respond_with_error_message('unbillable')
     end
   end
 
@@ -78,10 +72,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
       respond_with :message, text: lazy
     else
-      respond_with :message, text: "#{@message['from']['username']} /pigri è un comando riservato, non sei admin."
-      respond_with :message, text: "L'incidente verrà riportato."
-      sleep(5)
-      respond_with :message, text: '..scherzooo!'
+      respond_with_error_message('pigri')
     end
   end
 
@@ -247,5 +238,12 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     else
       respond_with :photo, photo: File.open(random_rocco), caption: msg
     end
+  end
+
+  def respond_with_error_message(command)
+    respond_with :message, text: "#{@message['from']['username']} /#{command} è un comando riservato, non sei admin."
+    respond_with :message, text: "L'incidente verrà riportato."
+    sleep(5)
+    respond_with :message, text: '..scherzooo!'
   end
 end
