@@ -49,7 +49,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def unbillable
-    admins = %w[gildof riccardocattaneo17 GiudiEM]
+    admins = %w[gildof massierc riccardocattaneo17 GiudiEM]
     if admins.include? @message['from']['username']
       UnbillableJob.perform_later
       respond_with :message, text: "Ciao #{@message['from']['username']}, job Unbillable avviato con successo 👍"
@@ -59,12 +59,14 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def pigri
-    admins = %w[gildof riccardocattaneo17 massierc]
-    if admins.include? @message['from']['username']
+    requestor = @message['from']['username']
+    admins = %w[gildof massierc riccardocattaneo17 GiudiEM]
+    if admins.include? requestor
       respond_with :message, text: "Ciao #{@message['from']['username']}, ecco la lista: "
       I18n.locale = :it
       skips = %w[FilippoLocoro kiaroskuro]
-      lazy = User.where(company_id: 0).order(updated_at: :desc).collect do |u|
+      query = requestor == 'GiudiEM' ? { company_id: 1 } : { company_id: 0 }
+      lazy = User.where(query).order(updated_at: :desc).collect do |u|
         data = I18n.l(u.updated_at.to_datetime, format: '%A %d %B %H:%M')
         next if skips.include?(u.username)
         "#{!u.name.blank? ? u.name : u.username} - #{data}"
