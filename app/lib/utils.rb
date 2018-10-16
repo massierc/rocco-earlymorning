@@ -43,20 +43,12 @@ module Utils
   end
 
   def giuditta_uid
-    user = if Rails.env.development?
-             '87171529'
-           else
-             '555036656'
-           end
+    user = Rails.env.development? ? '87171529' : '555036656'
     User.find_by_uid(user).uid
   end
 
   def riccardo_uid
-    user = if Rails.env.development?
-             'gildof'
-           else
-             'riccardocattaneo17'
-    end
+    user = Rails.env.development? ? 'gildof' : 'riccardocattaneo17'
     User.find_by_username(user).uid
   end
 
@@ -65,10 +57,6 @@ module Utils
   end
 
   def super_sheet
-    if Rails.env.production?
-      '1XcYUxvaGAnHPfjEWhRZVNjngbj8nUdt86JZ9w6rwnIc'
-    else
-      '1g6Rn0cH_u4ViLDLjlnJDEKcT3rPt-7EaveDbdOtK1TY'
-    end
+    Rails.env.production? ? '1XcYUxvaGAnHPfjEWhRZVNjngbj8nUdt86JZ9w6rwnIc' : '1g6Rn0cH_u4ViLDLjlnJDEKcT3rPt-7EaveDbdOtK1TY'
   end
 end
