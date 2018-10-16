@@ -142,8 +142,10 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   end
 
   def handle_timesheet
-    user_service = Authorizer.new(@message[:from][:id])
-    user_projects = user_service.project_cells
+    unless @user.level == 0
+      user_service = Authorizer.new(@message[:from][:id])
+      user_projects = user_service.project_cells
+    end
 
     if @message['text'] =~ /stop/i
       respond_with :message, text: "Richiesta fermata, see you #{next_business_day(DateTime.current).strftime('%A')}"
@@ -185,7 +187,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
         respond_with :message, text: msg
       end
     when 0
-      respond_with :message, text: 'Ma lavori ancora? 🤓 Se vuoi aggiungere altre ore di lavoro /premimimi!'
+      respond_with :message, text: "Ma lavori ancora #{@message['from']['username']}? 🤓 Se vuoi aggiungere altre ore di lavoro /premimimi!"
     end
   end
 
