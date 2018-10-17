@@ -10,7 +10,7 @@ class Hotline
     when 0 then nil
     when 1 then @recipient = args[0]
     else
-      @recipient = args[0].downcase
+      @recipient = args[0]
       @message = args.drop(1).join(' ')
     end
   end
