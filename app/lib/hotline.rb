@@ -40,7 +40,9 @@ class Hotline
       @message.prepend("`✉️ messaggio global:` ")
       User.where(company_id: [0, 1])
     else
-      User.where(username: @recipient)
+      Rails.env.production?
+      ? User.where("name ILIKE :query OR username ILIKE :query", query: "%#{@recipient}%")
+      : User.where("name LIKE :query OR username LIKE :query", query: "%#{@recipient.downcase}%")
     end
   end
 
