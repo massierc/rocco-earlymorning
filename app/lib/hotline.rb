@@ -19,8 +19,7 @@ class Hotline
     recipients = get_recipient_group
     if recipients.length > 0
       recipients.each do |r|
-        @bot.send_message(chat_id: r.uid, text: "✉️ messaggio da #{@requestor.username}:")
-        @bot.send_message(chat_id: r.uid, text: "#{@message}")
+        @bot.send_message(chat_id: r.uid, text: "✉️ #{@requestor.username} dice: #{message}")
       end
       conf_msg = "✉️ messaggio inviato a #{recipients.length > 1 ? "(#{recipients.length} utenti)" : @recipient}."
       @bot.send_message(chat_id: @requestor.uid, text: conf_msg)
