@@ -151,7 +151,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
   context_handler :hotline_what do |*what|
     requestor = @message['from']['username']
     recipient = session[:hotline][:recipient]
-    message = what.join(' ')
+    message = what
     hl = Hotline.new(requestor, recipient, message)
     hl.send_message
     session.delete(:hotline)

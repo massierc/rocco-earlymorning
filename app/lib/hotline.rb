@@ -11,7 +11,7 @@ class Hotline
     when 1 then @recipient = args[0]
     else
       @recipient = args[0].downcase
-      @message = args.drop(1)
+      @message = args.drop(1).join(' ')
     end
   end
 
