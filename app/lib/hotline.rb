@@ -19,7 +19,7 @@ class Hotline
     recipients = get_recipient_group
     if recipients.length > 0
       recipients.each do |r|
-        @bot.send_message(chat_id: r.uid, text: "✉️ #{@requestor.username} dice: #{message}")
+        @bot.send_message(chat_id: User.find_by_username('massierc').uid, text: message, parse_mode: 'markdown' )
       end
       conf_msg = "✉️ messaggio inviato a #{recipients.length > 1 ? "(#{recipients.length} utenti)" : @recipient}."
       @bot.send_message(chat_id: @requestor.uid, text: conf_msg)
@@ -30,10 +30,17 @@ class Hotline
 
   def get_recipient_group
     case @recipient
-    when 'emf' then User.where(company_id: 0)
-    when 'em' then User.where(company_id: 1)
-    when 'all' then User.where(company_id: [0, 1])
-    else User.where(username: @recipient)
+    when 'emf'
+      @message.prepend("`✉️ messaggio per EMF:` ")
+      User.where(company_id: 0)
+    when 'em'
+      @message.prepend("`✉️ messaggio per EM:` ")
+      User.where(company_id: 1)
+    when 'all'
+      @message.prepend("`✉️ messaggio global:` ")
+      User.where(company_id: [0, 1])
+    else
+      User.where(username: @recipient)
     end
   end
 
