@@ -215,7 +215,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       Authorizer.new(@user.uid).update_timesheet
       msg = "Grazie, il tuo TimeSheet è stato aggiornato!\nPremi /nota per aggiungere un commento.\nSe vuoi aggiungere altre ore di lavoro /premimimi!"
       if @user.special
-        handle_special_user
+        handle_special_user(msg)
       else
         respond_with :message, text: msg
       end
@@ -268,7 +268,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     end
   end
 
-  def handle_special_user
+  def handle_special_user(msg)
     random_rocco = Dir[Rails.root.join('public', 'rocco', '*')].sample
     if random_rocco.include?('gif')
       respond_with :document, document: File.open(random_rocco), caption: msg
