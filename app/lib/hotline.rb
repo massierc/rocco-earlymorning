@@ -4,7 +4,7 @@ class Hotline
 
   def initialize(requestor, *args)
     @bot = Telegram.bot
-    @admins = %w(gildof massierc)
+    @admins = %w(gildof massierc riccardocattaneo17)
     @requestor = User.find_by_username(requestor)
     case args.length
     when 0 then nil
