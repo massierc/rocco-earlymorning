@@ -142,7 +142,8 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     end
   end
 
-  context_handler :hotline_who do |who|
+  context_handler :hotline_who do |*who|
+    who = who.join(' ')
     session[:hotline][:recipient] = who
     save_context :hotline_what
     respond_with :message, text: "Cosa vuoi scrivere a #{who}?"
