@@ -12,8 +12,8 @@ module BusinessDate
   end
 
   def skip_weekends(date, inc)
-    date += inc
-    date += inc while is_weekend(date)
+    date += inc.days
+    date += inc.days while is_weekend(date)
     date
   end
   
