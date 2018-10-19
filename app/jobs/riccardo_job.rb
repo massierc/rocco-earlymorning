@@ -17,8 +17,9 @@ class RiccardoJob < ApplicationJob
       # end
 
       begin
-        service = Authorizer.new(user.uid).service
-        if service == 0
+        begin
+          service = Authorizer.new(user.uid).service
+        rescue
           service = Authorizer.new(riccardo_uid).service
         end
 
