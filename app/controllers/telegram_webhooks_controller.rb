@@ -214,14 +214,14 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     when 1
       @user.update(level: 0, howmuch: @message['text'])
       Authorizer.new(@user.uid).update_timesheet
-      msg = "Grazie, il tuo TimeSheet è stato aggiornato!\n\n👉 /nota per aggiungere un commento\n👉 /premimimi per aggiungere altre ore di lavoro"
+      msg = "Grazie, il tuo TimeSheet è stato aggiornato!\n\n👉 /nota per aggiungere un commento\n👉 /premimimi per aggiungere orde di lavoro su un nuovo task o sovrascrivere ore sullo stesso task"
       if @user.special
         handle_special_user(msg)
       else
         respond_with :message, text: msg
       end
     when 0
-      respond_with :message, text: "Ma lavori ancora #{@message['from']['username']}? 🤓 Se vuoi aggiungere altre ore di lavoro /premimimi!"
+      respond_with :message, text: "Ma lavori ancora #{@message['from']['username']}? 🤓 Se vuoi aggiungere orde di lavoro su un nuovo task o sovrascrivere ore sullo stesso task /premimimi!"
     end
   end
 
