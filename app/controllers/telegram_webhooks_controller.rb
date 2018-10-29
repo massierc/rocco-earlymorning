@@ -16,7 +16,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   def message(_message)
     return unless @user.persisted?
-    return unless @user.company_id == 0 || debugging_with('ElenorGee', 'marinamo', 'massierc')
+    return unless @user.company_id == 0 || debugging_with('ElenorGee', 'marinamo', 'massierc', 'GiudiEM')
     @user.setup > 0 ? handle_setup : handle_timesheet
   end
 
