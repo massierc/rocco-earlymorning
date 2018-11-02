@@ -221,7 +221,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
         respond_with :message, text: msg
       end
     when 0
-      respond_with :message, text: "Ma lavori ancora #{@message['from']['username']}? 🤓 Se vuoi aggiungere ore di lavoro su un nuovo task o sovrascrivere ore sullo stesso task /premimimi!"
+      respond_with :message, text: "Ciao #{@message['from']['username']}, se vuoi aggiungere ore di lavoro su un nuovo task o sovrascrivere ore sullo stesso task /premimimi!"
     end
   end
 
