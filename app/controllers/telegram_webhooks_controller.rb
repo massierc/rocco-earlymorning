@@ -181,7 +181,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       user_projects = user_service.project_cells
     end
 
-    if @message['text'] =~ /stop/i
+    if @message['text'] =~ /^stop$/i
       respond_with :message, text: "Richiesta fermata, see you #{next_business_day(DateTime.current).strftime('%A')}"
       @user.update(level: 0)
       return
