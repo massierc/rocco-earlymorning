@@ -57,6 +57,6 @@ module Utils
   end
 
   def super_sheet
-    Rails.env.production? ? '1XcYUxvaGAnHPfjEWhRZVNjngbj8nUdt86JZ9w6rwnIc' : '1g6Rn0cH_u4ViLDLjlnJDEKcT3rPt-7EaveDbdOtK1TY'
+    Rails.env.production? ? '1d0QcPxYoBTLSbUESODGB2Hz_vG3JB0Go9LI6EYVNCYg' : '1g6Rn0cH_u4ViLDLjlnJDEKcT3rPt-7EaveDbdOtK1TY'
   end
 end
