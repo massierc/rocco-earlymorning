@@ -24,11 +24,11 @@ class UnbillableJob < ApplicationJob
     nwo_service = Authorizer.new(riccardo_uid).service
     unbillable_sheets = nwo_service.get_spreadsheet_values(super_sheet, 'EXPORT!B:C').values
     unbillable_sheets = unbillable_sheets.map do |x|
-      x[0] if x[1]&.downcase == 'x' && x[0]&.downcase&.chomp != 'unbillable'
+      x[0] if x[1]&.downcase == 'x' && x[0]&.downcase&.chomp != 'unsold'
     end.compact
 
     unbillable_values = nwo_service
-                        .get_spreadsheet_values(super_sheet, 'Unbillable!D:O')
+                        .get_spreadsheet_values(super_sheet, 'Unsold!D:O')
                         .values
 
     nwo_sheets_values = {}
@@ -70,7 +70,7 @@ class UnbillableJob < ApplicationJob
                           end
 
         unbillable_days = unbillable_days.to_s
-        nwo_service.update_spreadsheet_value(super_sheet, "Unbillable!O#{range + 1}",
+        nwo_service.update_spreadsheet_value(super_sheet, "Unsold!O#{range + 1}",
                                              values([[unbillable_days]]),
                                              value_input_option: 'USER_ENTERED')
       end

@@ -65,33 +65,9 @@ class Authorizer
   def update_timesheet(user = @tg_user)
     day_column = find_current_workday(workday_cells).to_s26.upcase
     project_row = find_project_cell(project_cells, user.who, user.what)
-
     service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!#{day_column}#{project_row}", values(user.howmuch), value_input_option: 'USER_ENTERED')
     user.last_cell = "#{day_column}#{project_row}"
     user.save!
-  end
-
-  def update_timesheet_em(user = @tg_user, work_sessions)
-    day_column = find_current_workday(workday_cells).to_s26.upcase
-    # TODO: Optimize calls
-
-    if user.name.nil?
-      name = service.get_spreadsheet_values(user.sheet_id, "#{this_month_sheet}!A2").values[0][0]
-      user.name = name
-      user.save
-    end
-
-    work_sessions.each do |ws|
-      next if ws[1].blank? || ws[2] == 0 || ws[0] =~ /pranzo/i
-      pm_auth = Rails.env.production? ? Authorizer.new(giuditta_uid) : Authorizer.new(@tg_user.uid)
-      pm_service = pm_auth.service
-      
-      em_project_row = pm_auth.find_project_cell_with_name(pm_auth.project_cells_with_name(user.sheet_id), ws[0], ws[1], user.name, false)
-      pm_service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!#{day_column}#{em_project_row}", values(ws[2]), value_input_option: 'USER_ENTERED')
-      
-      project_row_pm = pm_auth.find_project_cell_with_name(pm_auth.project_cells_with_name(em_pm_sheet), ws[0], ws[1], user.name, true)
-      pm_service.update_spreadsheet_value(em_pm_sheet, "#{this_month_sheet}!#{day_column}#{project_row_pm}", values(ws[2]), value_input_option: 'USER_ENTERED')
-    end
   end
 
   def create_note(user = @tg_user, note)
@@ -141,25 +117,18 @@ class Authorizer
   def project_cells(sheet_id = @tg_user.sheet_id, prevent_loop=false)
     begin
       return if service == 0
-      projects = service.get_spreadsheet_values(sheet_id, "#{this_month_sheet}!B:C").values
-
+      if @tg_user.is_emf?
+        projects = service.get_spreadsheet_values(sheet_id, "#{this_month_sheet}!B:C").values
+      else
+        projects = service.get_spreadsheet_values(sheet_id, "#{this_month_sheet}!B:B").values
+      end
     rescue Google::Apis::ClientError => e
       if e.message.include?('Unable to parse range') && !prevent_loop
-        if @tg_user.company_id == 0
-          generate_this_month_timesheet
-        else
-          if (Rails.env.production?)
-            pm_auth = Authorizer.new(giuditta_uid)
-          else
-            pm_auth = Authorizer.new(@tg_user.uid)
-          end
-          pm_auth.generate_this_month_timesheet
-        end
+        generate_this_month_timesheet
         project_cells(prevent_loop=true)
       end
       return false
     end
-
     projects
   end
 
@@ -178,16 +147,6 @@ class Authorizer
     body = {requests: requests}
 
     service.batch_update_spreadsheet(sheet_id, body, {})
-  end
-
-  def project_cells_with_name(sheet_id = @tg_user.sheet_id)
-    begin
-      projects = service.get_spreadsheet_values(sheet_id, "#{this_month_sheet}!A:C").values
-    rescue Google::Apis::ClientError
-      return false
-    end
-
-    projects
   end
 
   def list_projects(cells)
@@ -209,141 +168,50 @@ class Authorizer
   end
 
   def find_project_cell(cells, project, activity)
-    project_exists = cells.any?{|c| c.include? project}
-    activity_exists = cells.any?{|c| c.include? activity}
+    if @tg_user.is_emf?
+      project_exists = cells.any? { |c| c.include? project }
+      activity_exists = cells.any? { |c| c.include? activity }
 
-    cell = if project != activity
-      cells.find_index { |arr| arr == [project, activity] }
-    else
-      same_name_project_and_activity = cells.find_index { |arr| arr == [project, activity] }
-      if same_name_project_and_activity
-        same_name_project_and_activity
+      cell = if project != activity
+        cells.find_index { |arr| arr == [project, activity] }
       else
-        cells.find_index { |arr| arr.compact == [project] }
+        same_name_project_and_activity = cells.find_index { |arr| arr == [project, activity] }
+        if same_name_project_and_activity
+          same_name_project_and_activity
+        else
+          cells.find_index { |arr| arr.compact == [project] }
+        end
       end
-    end
 
-    if cell
-      return cell += 1
-    else
-      data = {
-        project: {
-          exists: project_exists, value: project
-        },
-        activity: {
-          exists: activity_exists, value: activity
-        }
-      }
-      create_missing_row(@tg_user, data)
-      find_project_cell(project_cells, project, activity)
-    end
-  end
-
-  def find_project_cell_with_name(cells, project, activity, name, pm)
-    project_exists = cells.any?{|c| c.include? project}
-    activity_exists = cells.any?{|c| c.include? activity}
-    name_exists = cells.any?{|c| c.include? name}
-
-    cell = if project != activity
-      cells.find_index { |arr| arr == [name, project, activity] }
-    else
-      same_name_project_and_activity = cells.find_index { |arr| arr == [name, project, activity] }
-      if same_name_project_and_activity
-        same_name_project_and_activity
+      if cell
+        return cell += 1
       else
-        cells.find_index { |arr| arr.compact == [name, project] }
-      end
-    end
-
-    if cell
-      return cell += 1
-    else
-      data = {
-        name: {
-          exists: name_exists, value: name
-        },
-        project: {
-          exists: project_exists, value: project
-        },
-        activity: {
-          exists: activity_exists, value: activity
-        }
-      }
-      create_missing_row_with_name(@tg_user, data, pm)
-      
-      if pm
-        sheet = em_pm_sheet
-      else
-        sheet = User.find_by_name(data[:name][:value]).sheet_id
-      end
-      find_project_cell_with_name(project_cells_with_name(sheet), project, activity, name, pm)
-    end
-  end
-
-
-  def create_missing_row_with_name(user = @tg_user, data, pm)
-    if pm
-      sheet = em_pm_sheet
-    else
-      sheet = User.find_by_name(data[:name][:value]).sheet_id
-    end
-    
-    sheets = service.get_spreadsheet(sheet).sheets
-    sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
-    cell_index = project_cells_with_name(sheet).find_index { |arr| arr.include? data[:name][:value] } + 2
-
-    requests = []
-    requests.push(
-      insert_dimension: {
-        range: {
-          sheet_id: sheet_id,
-          dimension: 'ROWS',
-          start_index: cell_index,
-          end_index: cell_index+1
-        },
-        inherit_before: true
-      })
-
-    body = {requests: requests}
-
-    service.batch_update_spreadsheet(sheet, body, {})
-
-    name = data[:name][:value]
-
-    cell_index += 1
-
-    service.update_spreadsheet_value(sheet, "#{this_month_sheet}!A#{cell_index}", values(name), value_input_option: 'USER_ENTERED')
-    service.update_spreadsheet_value(sheet, "#{this_month_sheet}!B#{cell_index}", values(data[:project][:value]), value_input_option: 'USER_ENTERED')
-    service.update_spreadsheet_value(sheet, "#{this_month_sheet}!C#{cell_index}", values(data[:activity][:value]), value_input_option: 'USER_ENTERED')
-    service.update_spreadsheet_value(sheet, "#{this_month_sheet}!D#{cell_index}", values("=SUM(E#{cell_index}:AL#{cell_index})"), value_input_option: 'USER_ENTERED')
-    requests = []
-
-    requests.push({
-      repeat_cell: {
-        range: {
-          sheet_id: sheet_id,
-          start_row_index: cell_index-1,
-          end_row_index: cell_index,
-          start_column_index: 1,
-          end_column_index: 2
-        },
-        cell: {
-          user_entered_format: {
-            text_format: {
-              foreground_color: {
-                red: 1.0,
-                green: 0.0,
-                blue: 0.0
-              },
-              bold: true
-            }
+        data = {
+          project: {
+            exists: project_exists,
+            value: project
+          },
+          activity: {
+            exists: activity_exists,
+            value: activity
           }
-        },
-        fields: "userEnteredFormat(textFormat)"
+        }
+        create_missing_row(@tg_user, data)
+        find_project_cell(project_cells, project, activity)
+      end
+    else
+      cell = cells.index([project])
+      return cell += 1 if cell
+      data = {
+        project: {
+          exists: false,
+          value: project
+        }
       }
-    })
-    body = {requests: requests}
-    service.batch_update_spreadsheet(sheet, body, {})
+      Telegram.bot.send_message(chat_id: @tg_user.uid, text: "Sto aggiungendo il nuovo cliente...")
+      create_missing_row(@tg_user, data)
+      find_project_cell(project_cells, project, nil)
+    end
   end
 
   def create_missing_column(user = @tg_user, workdays, column)
@@ -375,7 +243,7 @@ class Authorizer
 
   def create_missing_row(user = @tg_user, data)
     sheets = service.get_spreadsheet(user.sheet_id).sheets
-    sheet_id = sheets.find {|s| s.properties.title == this_month_sheet}.properties.sheet_id
+    sheet_id = sheets.find { |s| s.properties.title == this_month_sheet }.properties.sheet_id
 
     if data[:project][:exists]
       cell_index = project_cells.find_index { |arr| arr.include? data[:project][:value] } + 1
@@ -390,12 +258,12 @@ class Authorizer
           sheet_id: sheet_id,
           dimension: 'ROWS',
           start_index: cell_index,
-          end_index: cell_index+1
+          end_index: cell_index + 1
         },
         inherit_before: true
       })
 
-    body = {requests: requests}
+    body = { requests: requests }
 
     service.batch_update_spreadsheet(user.sheet_id, body, {})
 
@@ -405,10 +273,9 @@ class Authorizer
 
     cell_index += 1
 
-    # TODO: 
     service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!A#{cell_index}", values(name), value_input_option: 'USER_ENTERED')
     service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!B#{cell_index}", values(data[:project][:value]), value_input_option: 'USER_ENTERED')
-    service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!C#{cell_index}", values(data[:activity][:value]), value_input_option: 'USER_ENTERED')
+    service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!C#{cell_index}", values(data[:activity][:value]), value_input_option: 'USER_ENTERED') if @tg_user.is_emf?
     service.update_spreadsheet_value(user.sheet_id, "#{this_month_sheet}!D#{cell_index}", values("=SUM(E#{cell_index}:AL#{cell_index})"), value_input_option: 'USER_ENTERED')
 
     requests = []
@@ -439,8 +306,6 @@ class Authorizer
     })
     body = {requests: requests}
     service.batch_update_spreadsheet(user.sheet_id, body, {})
-
-
   end
 
   def workday?(user = @tg_user)

@@ -1,12 +1,5 @@
 class User < ApplicationRecord
-  has_many :work_sessions, dependent: :destroy
-  has_many :work_days, dependent: :destroy
-
   validates :username, presence: true
-
-  def active_worksession
-    self.work_sessions.find_by_end_date(nil)
-  end
 
   def destroy_scheduled_jobs(job_name)
     user = self
@@ -25,29 +18,7 @@ class User < ApplicationRecord
     job = Object.const_get job_name
   end
 
-  def close_active_sessions
-    active_sessions = self.work_sessions.where(end_date: nil)
-    unless active_sessions.empty?
-      active_sessions.each do |session|
-        session.close
-        if session.duration < 300
-          session.delete_and_send_error
-        else
-          session.send_confirmation_message
-        end
-      end
-    end
-  end
-
-  def find_or_create_workday
-    work_day = self.work_days.find_by_date(Date.current)
-    unless work_day
-      work_day = self.work_days.create(date: Date.today)
-    end
-    work_day
-  end
-
-  def had_lunch?
-    self.find_or_create_workday.work_sessions.find_by_client("Pranzo") ? true : false
+  def is_emf?
+    self.company_id == 0
   end
 end

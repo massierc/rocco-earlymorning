@@ -11,66 +11,26 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     @message = ActiveSupport::HashWithIndifferentAccess.new(payload)
     @user = User.find_or_initialize_by(uid: @message['from']['id'], username: @message['from']['username'])
     @user.update(setup: 3) unless @user.persisted?
-    if @user.save
-      @work_day = @user.find_or_create_workday
-    else
-      attribute = @user.errors.messages.first[0].to_s.capitalize
-      error = @user.errors.messages.first[1][0]
-      @bot.send_message(chat_id: @user.uid, text: "❌ #{attribute} #{error}")
-    end
+    send_error_message unless @user.save
   end
 
   def message(_message)
     return unless @user.persisted?
-    return unless @user.company_id == 0 || debugging_with('ElenorGee', 'marinamo', 'massierc')
-    @work_day = @user.find_or_create_workday if @user.company_id == 1
-    msg = {
-      user: @user,
-      context: @work_day.aasm_state,
-      message: _message
-    }
-    if @user.setup > 0
-      if @user.setup == 3
-        start
-      else
-        handle_setup
-      end
-    else
-      if @user.company_id == 0
-        handle_timesheet
-      else
-        handle_message(msg)
-      end
-    end
+    # return unless @user.company_id == 0 || debugging_with('ElenorGee', 'marinamo', 'massierc', 'GiudiEM')
+    @user.setup > 0 ? handle_setup : handle_timesheet
   end
 
   def callback_query(data)
     data = JSON.parse(data)
-    return if data['state'] != @work_day.aasm_state
-    msg_id = payload['message']['message_id']
-    @bot.delete_message(chat_id: @user.uid, message_id: msg_id)
-    @work_day = @user.find_or_create_workday
-    manage_worksession(data)
-    ws = @work_day.work_sessions.find_by_end_date(nil)
-    if ws && @work_day.aasm_state == 'waiting_for_client'
-      if ws.client.nil?
-        @bot.send_message(chat_id: @user.uid, text: 'Scusa non ho capito 😕')
-        @work_day.wait_for_activity!
-      end
-    end
-    handle_state(@work_day.aasm_state) unless still_working?(data) || lunch?(data) || workday_finished?(data) || new_project?(data)
+    respond_with :message, text: "Ciao #{@message['from']['username']}!"
   end
 
   def premimimi
-    if @user.setup > 0
-      handle_setup
-    else
-      AskJob.perform_later(@user.uid) if @user.company_id == 0
-    end
+    @user.setup > 0 ? handle_setup : @user.destroy_scheduled_jobs('AskJob').perform_later(@user.uid)
   end
 
   def nwo(*args)
-    admins = %w[gildof riccardocattaneo17 massierc]
+    admins = %w[gildof massierc riccardocattaneo17 GiudiEM]
     user = @message['from']['username']
     if admins.include? user
       if args.length === 0
@@ -84,33 +44,29 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
         respond_with :message, text: "#{user}, #{args.join(' ')} non mi sembra un mese, ritenta!"
       end
     else
-      respond_with :message, text: "#{user} /nwo è un comando riservato, non sei admin."
-      respond_with :message, text: "L'incidente verrà riportato."
-      sleep(5)
-      respond_with :message, text: '..scherzooo!'
+      respond_with_error_message('nwo')
     end
   end
 
   def unbillable
-    admins = %w[gildof riccardocattaneo17]
+    admins = %w[gildof massierc riccardocattaneo17 GiudiEM]
     if admins.include? @message['from']['username']
       UnbillableJob.perform_later
-      respond_with :message, text: "Ciao #{@message['from']['username']}, job Unbillable avviato con successo 💩"
+      respond_with :message, text: "Ciao #{@message['from']['username']}, job Unbillable avviato con successo 👍"
     else
-      respond_with :message, text: "#{@message['from']['username']} /unbillable è un comando riservato, non sei admin."
-      respond_with :message, text: "L'incidente verrà riportato."
-      sleep(5)
-      respond_with :message, text: '..scherzooo!'
+      respond_with_error_message('unbillable')
     end
   end
 
   def pigri
-    admins = %w[gildof riccardocattaneo17]
-    if admins.include? @message['from']['username']
+    requestor = @message['from']['username']
+    admins = %w[gildof massierc riccardocattaneo17 GiudiEM]
+    if admins.include? requestor
       respond_with :message, text: "Ciao #{@message['from']['username']}, ecco la lista: "
       I18n.locale = :it
       skips = %w[FilippoLocoro kiaroskuro]
-      lazy = User.where(company_id: 0).order(updated_at: :desc).collect do |u|
+      query = requestor == 'GiudiEM' ? { company_id: 1 } : { company_id: 0 }
+      lazy = User.where(query).order(updated_at: :desc).collect do |u|
         data = I18n.l(u.updated_at.to_datetime, format: '%A %d %B %H:%M')
         next if skips.include?(u.username)
         "#{!u.name.blank? ? u.name : u.username} - #{data}"
@@ -118,10 +74,7 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
       respond_with :message, text: lazy
     else
-      respond_with :message, text: "#{@message['from']['username']} /pigri è un comando riservato, non sei admin."
-      respond_with :message, text: "L'incidente verrà riportato."
-      sleep(5)
-      respond_with :message, text: '..scherzooo!'
+      respond_with_error_message('pigri')
     end
   end
 
@@ -162,7 +115,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
 
   def nota(*)
     save_context :nota
-
     respond_with :message, text: "#{@message[:from][:first_name]} scrivi ora la nota per #{@user.who}"
   end
 
@@ -172,29 +124,46 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     respond_with :message, text: 'Nota aggiunta correttamente'
   end
 
+  def hotline(*args)
+    hl = Hotline.new(@message['from']['username'], *args)
+    respond_with_error_message('hotline') unless hl.is_valid?
+    return unless hl.is_valid?
+    case hl.status
+    when 'complete'
+      hl.send_message
+    when 'message_missing'
+      session[:hotline] = { recipient: hl.recipient, message: '' }
+      save_context :hotline_what
+      respond_with :message, text: "Cosa vuoi scrivere a #{hl.recipient}?"
+    else
+      session[:hotline] = { recipient: '', message: '' }
+      save_context :hotline_who
+      respond_with :message, text: "A chi vuoi mandare il messaggio?"
+    end
+  end
+
+  context_handler :hotline_who do |*who|
+    who = who.join(' ')
+    session[:hotline][:recipient] = who
+    save_context :hotline_what
+    respond_with :message, text: "Cosa vuoi scrivere a #{who}?"
+  end
+  
+  context_handler :hotline_what do |*what|
+    requestor = @message['from']['username']
+    recipient = session[:hotline][:recipient]
+    message = what
+    hl = Hotline.new(requestor, recipient, message)
+    hl.send_message
+    session.delete(:hotline)
+  end
+
   private
 
-  def handle_message(msg)
-    case msg[:context]
-    when 'waiting_for_morning'
-      respond_with :message, text: 'Ciao 👋'
-      handle_state(@work_day.aasm_state)
-    when 'waiting_for_new_client'
-      client = msg[:message]['text']
-      @user.active_worksession.update(client: client)
-      respond_with :message, text: "▶️ aggiunto #{client} alla tua lista di clienti"
-      @work_day.wait_for_client!
-      handle_state(@work_day.aasm_state)
-    when 'waiting_for_end_of_session'
-      @user.destroy_scheduled_jobs('WorkTimerJob').perform_now(@user.id)
-    when 'workday_finished'
-      respond_with :message, text: "Ehi #{msg[:message]['from']['username']}, la giornata è finita!"
-      respond_with :message, text: 'Ci risentiamo domani 🙂'
-      nil
-    else
-      respond_with :message, text: "Scusa, non capisco cosa intendi con #{msg[:message]['text']} 🤔"
-      nil
-    end
+  def send_error_message
+    attribute = @user.errors.messages.first[0].to_s.capitalize
+    error = @user.errors.messages.first[1][0]
+    @bot.send_message(chat_id: @user.uid, text: "❌ #{attribute} #{error}")
   end
 
   def debugging_with(*users)
@@ -206,97 +175,13 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     end
   end
 
-  def manage_worksession(data)
-    if session_finished?(data)
-      @user.close_active_sessions
-    elsif still_working?(data)
-      @bot.send_message(chat_id: @user.uid, text: 'Ok, a dopo!')
-    elsif lunch?(data)
-      @user.close_active_sessions
-      create_lunch
-    elsif workday_finished?(data)
-      @work_day.end!
-      @user.close_active_sessions
-      @work_day.send_evening_recap
-      @bot.send_message(chat_id: @user.uid, text: 'Tra poco aggiorno il tuo timesheet. Buona serata 🍻')
-      next_business_day = next_business_day(DateTime.current)
-      next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 9, 30)
-      @user.destroy_scheduled_jobs('WorkTimerJob')
-      @user.destroy_scheduled_jobs('HelloJob').set(wait_until: next_business_day).perform_later(@user.uid)
-      @user.destroy_scheduled_jobs('UpdateTimesheetsJob').perform_later(@user.id)
-      if @user.special
-        r = random_rocco
-        if r.include?('gif')
-          @bot.send_document(chat_id: @user.uid, document: File.open(r))
-        else
-          @bot.send_photo(chat_id: @user.uid, photo: File.open(r))
-        end
-      end
-    elsif new_project?(data)
-      @work_day.wait_for_new_client!
-      @bot.send_message(chat_id: @user.uid, text: 'Su cosa lavori?')
-    elsif new_activity?(data)
-      @work_day.wait_for_morning!
-    elsif ask_again?(data)
-      @work_day.wait_for_end_of_session!
-    else
-      update_worksession(data)
-    end
-  end
-
-  def handle_state(state)
-    sh = StateHandler.new(user: @user, work_day: @work_day)
-    sh.public_send(state)
-  end
-
-  def update_worksession(data)
-    if data['state'] == 'waiting_for_activity'
-      @user.work_sessions.create(start_date: DateTime.current, work_day: @work_day, activity: data['value'])
-      respond_with :message, text: "▶️ lavori da: #{data['value']}"
-    elsif data['state'] == 'waiting_for_client'
-      @user.active_worksession.update(client: data['value'])
-      respond_with :message, text: "▶️ stai lavorando su: #{data['value']}"
-    end
-  end
-
-  def session_finished?(data)
-    data['state'] == 'waiting_for_end_of_session' && data['value'] == 'finished'
-  end
-
-  def still_working?(data)
-    data['state'] == 'waiting_for_end_of_session' && data['value'] == 'still_working'
-  end
-
-  def lunch?(data)
-    data['state'] == 'waiting_for_end_of_session' && data['value'] == 'lunch'
-  end
-
-  def workday_finished?(data)
-    data['state'] == 'waiting_for_confirmation' && data['value'] == 'good_night'
-  end
-
-  def new_project?(data)
-    data['state'] == 'waiting_for_client' && data['value'] == 'new_proj'
-  end
-
-  def new_activity?(data)
-    data['state'] == 'waiting_for_user_input' && data['value'] == 'add_new_activity'
-  end
-
-  def ask_again?(data)
-    data['state'] == 'waiting_for_confirmation' && data['value'] == 'ask_again'
-  end
-
-  def create_lunch
-    @user.work_sessions.create(start_date: DateTime.current, work_day: @work_day, client: 'Pranzo', activity: '')
-    @bot.send_message(chat_id: @user.uid, text: 'Buon appetito! 🍔')
-  end
-
   def handle_timesheet
-    user_service = Authorizer.new(@message[:from][:id])
-    user_projects = user_service.project_cells
+    unless @user.level == 0
+      user_service = Authorizer.new(@message[:from][:id])
+      user_projects = user_service.project_cells
+    end
 
-    if @message['text'] =~ /stop/i
+    if @message['text'] =~ /^stop$/i
       respond_with :message, text: "Richiesta fermata, see you #{next_business_day(DateTime.current).strftime('%A')}"
       @user.update(level: 0)
       return
@@ -305,7 +190,6 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
     case @user.level
     when 3
       @user.update(level: 2, who: @message['text'])
-
       activities = user_service.list_activities(user_projects, @user.who)
       respond_with :message, text: 'Quale activity?', reply_markup: {
         keyboard: activities,
@@ -315,76 +199,42 @@ class TelegramWebhooksController < Telegram::Bot::UpdatesController
       }
 
     when 2
-      @user.update(level: 1, what: @message['text'])
-      # activities = user_service.list_activities(user_projects, @user.who)
+      if @user.company_id == 0
+        @user.update(level: 1, what: @message['text'])
+      else  
+        @user.update(level: 1, who: @message['text'])
+        @user.update(level: 1, what: nil)
+      end
       respond_with :message, text: 'E per quanto tempo?', reply_markup: {
-        # keyboard: [[@user.howmuch.to_s, '8'], ['stop']],
         keyboard: [%w[0.5 1 2 3], %w[4 5 6 7], %w[8 stop]],
         resize_keyboard: true,
         one_time_keyboard: true,
         selective: true
       }
-
     when 1
       @user.update(level: 0, howmuch: @message['text'])
-      Authorizer.new(@message[:from][:id]).update_timesheet(@user)
-      m = "Grazie, il tuo TimeSheet è stato aggiornato, premi /nota per aggiungere un commento.
-Se vuoi aggiungere altre ore di lavoro /premimimi!"
+      Authorizer.new(@user.uid).update_timesheet
+      msg = "Grazie, il tuo TimeSheet è stato aggiornato!\n\n👉 /nota per aggiungere un commento\n👉 /premimimi per aggiungere ore di lavoro su un nuovo task o sovrascrivere ore sullo stesso task"
       if @user.special
-        r = random_rocco
-        if r.include?('gif')
-          respond_with :document, document: File.open(r), caption: m
-        else
-          respond_with :photo, photo: File.open(r), caption: m
-        end
+        handle_special_user(msg)
       else
-        respond_with :message, text: m
+        respond_with :message, text: msg
       end
     when 0
-      respond_with :message, text: 'Ma lavori ancora? :P Se vuoi aggiungere altre ore di lavoro /premimimi!'
+      respond_with :message, text: "Ciao #{@message['from']['username']}, se vuoi aggiungere ore di lavoro su un nuovo task o sovrascrivere ore sullo stesso task /premimimi!"
     end
   end
 
   def handle_setup
     case @user.setup
-    when 5
-      text = @message['text'].capitalize.chomp.strip
-      if %w[Mono Pluri].include? text
-        text == 'Mono' ? @user.update(company_id: 2, setup: 0) : @user.update(company_id: 1, setup: 0)
-        respond_with :message, text: 'Grazie mille, il setup è completo!'
-        handle_state(@work_day.aasm_state)
-      else
-        respond_with :message, text: 'Scusa, non ho capito: sei mono o pluri cliente?', reply_markup: {
-          keyboard: [%w[Mono Pluri]],
-          resize_keyboard: true,
-          one_time_keyboard: true,
-          selective: true
-        }
-      end
     when 4
       if %w[EM EMF].include? @message['text'].upcase.chomp
-        if @message['text'] == 'EM'
-          respond_with :message, text: 'Perfetto, e sei mono o pluri cliente?', reply_markup: {
-            keyboard: [%w[Mono Pluri]],
-            resize_keyboard: true,
-            one_time_keyboard: true,
-            selective: true
-          }
-          @user.update(setup: 5)
-        else
-          @user.update(company_id: 0, setup: 0)
-          respond_with :message, text: 'Grazie mille, ti contatterò alle 19:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
-        end
-
-        if @user.company_id == 0
-          next_business_day = next_business_day(DateTime.current)
-          next_business_day = Time.new(next_business_day.year, next_business_day.month, next_business_day.mday, 19, 0o0)
-          job = AskJob.set(wait_until: next_business_day).perform_later(@user.uid)
-          @user.update(jid: job.job_id, level: 3)
-        else
-          @user.update(level: 0)
-        end
-
+        @message['text'] == 'EM' ? @user.update(company_id: 1, setup: 0) : @user.update(company_id: 0, setup: 0)
+        respond_with :message, text: 'Grazie mille, il setup è completo!'
+        respond_with :message, text: 'Ti contatterò alle 19:00. Vuoi segnare il tuo TimeSheet ora? /premimimi!'
+        contact_time = current_or_next_business_day(DateTime.current)
+        job = @user.destroy_scheduled_jobs('AskJob').set(wait_until: contact_time).perform_later(@user.uid)
+        @user.update(level: 3)
       else
         respond_with :message, text: 'Scusa non ho capito, sei EM o EM Finance (EM/EMF)?', reply_markup: {
           keyboard: [%w[EM EMF]],
@@ -393,6 +243,8 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
           selective: true
         }
       end
+    when 3
+      start
     when 2
       @auth = Authorizer.new(@message['from']['id']).store_auth(@message[:text])
       if @auth == 0 || @auth.nil?
@@ -407,9 +259,7 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
       end
     when 1
       sheet_id = @message['text'].split('spreadsheets/d/')[1].split('/')[0]
-      @user.update(sheet_id: sheet_id)
-
-      @user.update(setup: 4)
+      @user.update(sheet_id: sheet_id, setup: 4)
       respond_with :message, text: 'Grazie mille, ora mi serve sapere se lavori per EM o EM Finance', reply_markup: {
         keyboard: [%w[EM EMF]],
         resize_keyboard: true,
@@ -419,7 +269,19 @@ Se vuoi aggiungere altre ore di lavoro /premimimi!"
     end
   end
 
-  def random_rocco
-    Dir[Rails.root.join('public', 'rocco', '*')].sample
+  def handle_special_user(msg)
+    random_rocco = Dir[Rails.root.join('public', 'rocco', '*')].sample
+    if random_rocco.include?('gif')
+      respond_with :document, document: File.open(random_rocco), caption: msg
+    else
+      respond_with :photo, photo: File.open(random_rocco), caption: msg
+    end
+  end
+
+  def respond_with_error_message(command)
+    respond_with :message, text: "#{@message['from']['username']} /#{command} è un comando riservato, non sei admin."
+    respond_with :message, text: "L'incidente verrà riportato."
+    sleep(5)
+    respond_with :message, text: '..scherzooo!'
   end
 end
