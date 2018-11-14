@@ -24,7 +24,7 @@ class UnbillableJob < ApplicationJob
     nwo_service = Authorizer.new(riccardo_uid).service
     unbillable_sheets = nwo_service.get_spreadsheet_values(super_sheet, 'EXPORT!B:C').values
     unbillable_sheets = unbillable_sheets.map do |x|
-      x[0] if x[1]&.downcase == 'x' && x[0]&.downcase&.chomp != 'unbillable'
+      x[0] if x[1]&.downcase == 'x' && x[0]&.downcase&.chomp != 'unsold'
     end.compact
 
     unbillable_values = nwo_service
